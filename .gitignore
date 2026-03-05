@@ -1,0 +1,26 @@
+node_modules/
+__pycache__/
+*.pyc
+.claude/
+libredwg/
+screenshots/
+0305/
+skeleton_docs/
+*.pdf
+*.dwg
+Rev 2.html
+CLAUDE.md
+upload_supabase.py
+skeleton_raw.csv
+skeleton_with_features.csv
+web/dist/track_map.html
+web/UsersAdminDesktoppredwebscreenshots/
+web/screenshots/
+web/tests/
+web/src/js/html2canvas.min.js
+web/src/js/jspdf.umd.min.js
+web/src/js/choices.min.js
+web/src/css/choices.min.css
+web/src/js/xlsx.min.js
+web/src/sw.js
+web/src/manifest.json
