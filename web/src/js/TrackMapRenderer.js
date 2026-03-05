@@ -11,91 +11,74 @@ class TrackMapRenderer {
     this._zoomG = null;
     this._animating = false;
     this._cachedSplitStats = null;
+    this._tmData = typeof TRACKMAP_DATA !== 'undefined' ? TRACKMAP_DATA : null;
+    this._sectionStations = [
+      {from:0, to:215}, {from:215, to:425}, {from:425, to:730}, {from:730, to:920}, {from:920, to:1200}
+    ];
     this._sectionColors = ['#3b82f6','#8b5cf6','#ec4899','#f97316','#10b981'];
     this._sectionLabels = ['Start\u2192Int.1','Int.1\u2192Int.2','Int.2\u2192Int.3','Int.3\u2192Int.4','Int.4\u2192Finish'];
     this._heatGood = '#10b981'; this._heatMid = '#eab308'; this._heatBad = '#ef4444';
 
-    // 평창 알펜시아 트랙 경로 좌표 (SVG viewBox 0 0 900 600)
-    this._trackPath = [
-      { x: 820, y: 45, label: 'START', type: 'start' },
-      { x: 770, y: 55 },
-      { x: 720, y: 70 },
-      { x: 680, y: 90, label: 'C1', type: 'curve' },
-      { x: 650, y: 120 },
-      { x: 640, y: 155, label: 'C2', type: 'curve' },
-      { x: 650, y: 190 },
-      { x: 680, y: 210, label: 'C3', type: 'curve' },
-      { x: 720, y: 215 },
-      { x: 750, y: 195 },
-      { x: 760, y: 165, label: 'C4', type: 'curve' },
-      { x: 740, y: 135 },
-      { x: 700, y: 130 },
-      { x: 660, y: 145 },
-      { x: 630, y: 175, label: 'C5', type: 'curve' },
-      { x: 610, y: 210 },
-      { x: 580, y: 235, label: 'C6', type: 'curve' },
-      { x: 540, y: 245 },
-      { x: 500, y: 235, label: 'C7', type: 'curve' },
-      { x: 470, y: 215 },
-      { x: 450, y: 190 },
-      { x: 420, y: 175 },
-      { x: 385, y: 185, label: 'C8', type: 'curve' },
-      { x: 360, y: 210 },
-      { x: 350, y: 245, label: 'C9', type: 'curve' },
-      { x: 360, y: 280 },
-      { x: 390, y: 300, label: 'C10', type: 'curve' },
-      { x: 430, y: 305 },
-      { x: 470, y: 290 },
-      { x: 500, y: 265 },
-      { x: 520, y: 240 },
-      { x: 530, y: 280 },
-      { x: 520, y: 315, label: 'C11', type: 'curve' },
-      { x: 490, y: 340 },
-      { x: 450, y: 350 },
-      { x: 410, y: 340 },
-      { x: 380, y: 320 },
-      { x: 350, y: 340, label: 'C12', type: 'curve' },
-      { x: 330, y: 370 },
-      { x: 320, y: 405, label: 'C13', type: 'curve' },
-      { x: 330, y: 435 },
-      { x: 360, y: 450 },
-      { x: 395, y: 440, label: 'C14', type: 'curve' },
-      { x: 420, y: 420 },
-      { x: 430, y: 395 },
-      { x: 420, y: 370 },
-      { x: 390, y: 360 },
-      { x: 355, y: 370 },
-      { x: 320, y: 400 },
-      { x: 290, y: 435 },
-      { x: 260, y: 460, label: 'C15', type: 'curve' },
-      { x: 220, y: 475 },
-      { x: 180, y: 480 },
-      { x: 140, y: 475, label: 'C16', type: 'curve' },
-      { x: 115, y: 495 },
-      { x: 90, y: 520, label: 'FINISH', type: 'finish' },
-    ];
-
-    // 센서 위치 (트랙 경로 인덱스 매핑)
     this._sensorPositions = {
-      start:  { pathIdx: 0, label: 'Start', color: '#2e7d32' },
-      int1:   { pathIdx: 10, label: 'Int.1 (C4)', color: '#1565c0' },
-      int2:   { pathIdx: 18, label: 'Int.2 (C7)', color: '#6a1b9a' },
-      int3:   { pathIdx: 37, label: 'Int.3 (C12)', color: '#e65100' },
-      int4:   { pathIdx: 50, label: 'Int.4 (C15)', color: '#c62828' },
-      finish: { pathIdx: 55, label: 'Finish', color: '#f57f17' },
+      start:  { label: 'Start', color: '#2e7d32', station: 0 },
+      int1:   { label: 'Int.1 (C4)', color: '#1565c0', station: 215 },
+      int2:   { label: 'Int.2 (C7)', color: '#6a1b9a', station: 425 },
+      int3:   { label: 'Int.3 (C12)', color: '#e65100', station: 730 },
+      int4:   { label: 'Int.4 (C15)', color: '#c62828', station: 920 },
+      finish: { label: 'Finish', color: '#f57f17', station: 1200 },
     };
-
-    // 구간별 세그먼트
     this._segments = [
-      { from: 'start', to: 'int1', label: 'Start → Int.1', color: '#2e7d32', startIdx: 0, endIdx: 10 },
-      { from: 'int1', to: 'int2', label: 'Int.1 → Int.2', color: '#1565c0', startIdx: 10, endIdx: 18 },
-      { from: 'int2', to: 'int3', label: 'Int.2 → Int.3', color: '#6a1b9a', startIdx: 18, endIdx: 37 },
-      { from: 'int3', to: 'int4', label: 'Int.3 → Int.4', color: '#e65100', startIdx: 37, endIdx: 50 },
-      { from: 'int4', to: 'finish', label: 'Int.4 → Finish', color: '#c62828', startIdx: 50, endIdx: 55 },
+      { from: 'start', to: 'int1', label: 'Start \u2192 Int.1', color: '#2e7d32' },
+      { from: 'int1', to: 'int2', label: 'Int.1 \u2192 Int.2', color: '#1565c0' },
+      { from: 'int2', to: 'int3', label: 'Int.2 \u2192 Int.3', color: '#6a1b9a' },
+      { from: 'int3', to: 'int4', label: 'Int.3 \u2192 Int.4', color: '#e65100' },
+      { from: 'int4', to: 'finish', label: 'Int.4 \u2192 Finish', color: '#c62828' },
     ];
-
-    // D3 line generator
     this._lineGen = null;
+    this._trackPoints = null;
+    this._trackPointsFull = null;
+    this._sensorSvgPts = {};
+    this._vbW = 786;
+    this._vbH = 700;
+  }
+
+  _projectStations() {
+    if (!this._tmData || !this._tmData.track) return;
+    const stations = this._tmData.track.stations;
+    const xs = stations.map(s => s.x), ys = stations.map(s => s.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 40, vbW = this._vbW, vbH = this._vbH;
+    const scale = Math.min((vbW - 2*pad) / (maxX - minX), (vbH - 2*pad) / (maxY - minY));
+    const offsetX = pad + (vbW - 2*pad - (maxX - minX)*scale) / 2;
+    const offsetY = pad + (vbH - 2*pad - (maxY - minY)*scale) / 2;
+    this._trackPointsFull = stations.map(s => ({
+      x: offsetX + (s.x - minX) * scale,
+      y: vbH - (offsetY + (s.y - minY) * scale),
+      dist: s.dist
+    }));
+    if (this._trackPointsFull.length > 200) {
+      const step = Math.ceil(this._trackPointsFull.length / 200);
+      const thinned = this._trackPointsFull.filter((_, i) => i % step === 0);
+      if (thinned[thinned.length-1] !== this._trackPointsFull[this._trackPointsFull.length-1])
+        thinned.push(this._trackPointsFull[this._trackPointsFull.length-1]);
+      this._trackPoints = thinned;
+    } else {
+      this._trackPoints = this._trackPointsFull;
+    }
+    Object.entries(this._sensorPositions).forEach(([key, sensor]) => {
+      let closest = this._trackPointsFull[0], minDiff = Math.abs(this._trackPointsFull[0].dist - sensor.station);
+      for (const pt of this._trackPointsFull) {
+        const diff = Math.abs(pt.dist - sensor.station);
+        if (diff < minDiff) { minDiff = diff; closest = pt; }
+      }
+      this._sensorSvgPts[key] = { x: closest.x, y: closest.y };
+    });
+  }
+
+  _getSegmentPoints(segIdx) {
+    const sec = this._sectionStations[segIdx];
+    return this._trackPointsFull.filter(p => p.dist >= sec.from && p.dist <= sec.to);
   }
 
   render(containerId) {
@@ -125,8 +108,11 @@ class TrackMapRenderer {
       .x(d => d.x).y(d => d.y)
       .curve(d3.curveCatmullRom.alpha(0.5));
 
+    // 실좌표 → SVG 좌표 투영
+    this._projectStations();
+
     // SVG 생성 — 컨테이너 너비 기준 높이 직접 계산
-    const vbX = 60, vbY = 8, vbW = 786, vbH = 550;
+    const vbX = 0, vbY = 0, vbW = this._vbW, vbH = this._vbH;
     const cW = container.getBoundingClientRect().width || 800;
     const svgH = Math.round(cW * vbH / vbW);
     const svg = d3.select(container).append('svg')
@@ -177,13 +163,13 @@ class TrackMapRenderer {
 
     // 세그먼트별 그라데이션
     this._segments.forEach((seg, i) => {
+      const s = this._sensorSvgPts[seg.from], e = this._sensorSvgPts[seg.to];
+      if (!s || !e) return;
       const grad = defs.append('linearGradient')
         .attr('id', `seg-grad-${i}`)
         .attr('gradientUnits', 'userSpaceOnUse')
-        .attr('x1', this._trackPath[seg.startIdx].x)
-        .attr('y1', this._trackPath[seg.startIdx].y)
-        .attr('x2', this._trackPath[seg.endIdx].x)
-        .attr('y2', this._trackPath[seg.endIdx].y);
+        .attr('x1', s.x).attr('y1', s.y)
+        .attr('x2', e.x).attr('y2', e.y);
       grad.append('stop').attr('offset', '0%').attr('stop-color', seg.color).attr('stop-opacity', 0.5);
       grad.append('stop').attr('offset', '100%').attr('stop-color', seg.color).attr('stop-opacity', 1);
     });
@@ -205,13 +191,13 @@ class TrackMapRenderer {
 
     // 배경
     zoomG.append('rect')
-      .attr('x', 60).attr('y', 8)
-      .attr('width', 786).attr('height', 550)
+      .attr('x', 0).attr('y', 0)
+      .attr('width', this._vbW).attr('height', this._vbH)
       .attr('fill', 'url(#bg-grad)');
 
     // 전체 트랙 배경 경로
     zoomG.append('path')
-      .attr('d', this._lineGen(this._trackPath))
+      .attr('d', this._lineGen(this._trackPoints))
       .attr('fill', 'none')
       .attr('stroke', '#d0d5dd')
       .attr('stroke-width', 12)
@@ -221,7 +207,7 @@ class TrackMapRenderer {
     // 세그먼트별 컬러 경로
     const segGroup = zoomG.append('g').attr('class', 'segments');
     this._segments.forEach((seg, idx) => {
-      const pts = this._trackPath.slice(seg.startIdx, seg.endIdx + 1);
+      const pts = this._getSegmentPoints(idx);
       segGroup.append('path')
         .attr('d', this._lineGen(pts))
         .attr('fill', 'none')
@@ -239,22 +225,31 @@ class TrackMapRenderer {
     });
 
     // 커브 번호 마커
-    const curveG = zoomG.append('g').attr('class', 'curves');
-    this._trackPath.filter(pt => pt.type === 'curve').forEach(pt => {
-      curveG.append('circle')
-        .attr('cx', pt.x).attr('cy', pt.y).attr('r', 8)
-        .attr('fill', 'white').attr('stroke', '#888').attr('stroke-width', 1.5);
-      curveG.append('text')
-        .attr('x', pt.x).attr('y', pt.y + 4)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', 9).attr('font-weight', 600).attr('fill', '#555')
-        .text(pt.label.replace('C', ''));
-    });
+    if (this._tmData && this._tmData.track && this._tmData.track.curves) {
+      const curveG = zoomG.append('g').attr('class', 'curves');
+      this._tmData.track.curves.forEach(c => {
+        const xs = this._tmData.track.stations.map(s => s.x), ys = this._tmData.track.stations.map(s => s.y);
+        const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+        const pad = 40, scale = Math.min((this._vbW - 2*pad) / (maxX - minX), (this._vbH - 2*pad) / (maxY - minY));
+        const offsetX = pad + (this._vbW - 2*pad - (maxX - minX)*scale) / 2;
+        const offsetY = pad + (this._vbH - 2*pad - (maxY - minY)*scale) / 2;
+        const cx = offsetX + (c.x - minX) * scale;
+        const cy = this._vbH - (offsetY + (c.y - minY) * scale);
+        curveG.append('circle')
+          .attr('cx', cx).attr('cy', cy).attr('r', 8)
+          .attr('fill', 'white').attr('stroke', '#888').attr('stroke-width', 1.5);
+        curveG.append('text')
+          .attr('x', cx).attr('y', cy + 4)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', 9).attr('font-weight', 600).attr('fill', '#555')
+          .text(c.name.replace('C', ''));
+      });
+    }
 
     // 센서 마커
     const sensorG = zoomG.append('g').attr('class', 'sensors');
     Object.entries(this._sensorPositions).forEach(([key, sensor]) => {
-      const pt = this._trackPath[sensor.pathIdx];
+      const pt = this._sensorSvgPts[key];
       if (!pt) return;
       const g = sensorG.append('g')
         .attr('class', 'sensor-marker')
@@ -328,7 +323,7 @@ class TrackMapRenderer {
     // SVG 높이를 컨테이너 너비 비율에 맞춤
     if (this._containerEl) {
       const cW = this._containerEl.getBoundingClientRect().width || 800;
-      this._svgEl.setAttribute('height', Math.round(cW * 550 / 786));
+      this._svgEl.setAttribute('height', Math.round(cW * this._vbH / this._vbW));
     }
     const w = window.innerWidth;
     // 미니맵 모바일에서 축소
@@ -423,7 +418,7 @@ class TrackMapRenderer {
     sledG.selectAll('*').remove();
 
     // 전체 트랙 경로
-    const pathD = this._lineGen(this._trackPath);
+    const pathD = this._lineGen(this._trackPoints);
     const tempPath = sledG.append('path')
       .attr('d', pathD).attr('fill', 'none').attr('stroke', 'none');
     const pathNode = tempPath.node();
@@ -528,7 +523,7 @@ class TrackMapRenderer {
     Object.entries(values).forEach(([key, val]) => {
       if (val == null) return;
       const sensor = this._sensorPositions[key];
-      const pt = this._trackPath[sensor.pathIdx];
+      const pt = this._sensorSvgPts[key];
       if (!pt) return;
 
       const valStr = parseFloat(val).toFixed(3) + 's';
@@ -585,8 +580,13 @@ class TrackMapRenderer {
       const diff = segTimes[idx];
       if (diff == null) return;
 
-      const midIdx = Math.floor((seg.startIdx + seg.endIdx) / 2);
-      const midPt = this._trackPath[midIdx];
+      const secSta = this._sectionStations[idx];
+      const midDist = (secSta.from + secSta.to) / 2;
+      let midPt = this._sensorSvgPts[seg.from], minD = Infinity;
+      for (const pt of this._trackPointsFull) {
+        const d = Math.abs(pt.dist - midDist);
+        if (d < minD) { minD = d; midPt = pt; }
+      }
       if (!midPt) return;
 
       // 속도 기반 색상 (빠르면 진한, 느리면 연한)
@@ -777,13 +777,13 @@ class TrackMapRenderer {
 
     // 트랙 경로
     miniSvg.append('path')
-      .attr('d', this._lineGen(this._trackPath))
+      .attr('d', this._lineGen(this._trackPoints))
       .attr('fill', 'none').attr('stroke', '#888').attr('stroke-width', 4)
       .attr('stroke-linecap', 'round');
 
     // 센서 마커 (간략)
-    Object.values(this._sensorPositions).forEach(sensor => {
-      const pt = this._trackPath[sensor.pathIdx];
+    Object.entries(this._sensorPositions).forEach(([k, sensor]) => {
+      const pt = this._sensorSvgPts[k];
       if (pt) miniSvg.append('circle').attr('cx', pt.x).attr('cy', pt.y).attr('r', 5).attr('fill', sensor.color);
     });
 
