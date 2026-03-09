@@ -351,13 +351,19 @@ class UIController {
     const compareEl = document.getElementById('pred-model-compare');
     const gender = this.#el('pred-gender-filter')?.value || '';
 
+    if (!gender) {
+      if (resultEl) resultEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛷</div><div class="empty-state-text">성별을 선택하고 예측을 실행하세요</div></div>';
+      if (compareEl) compareEl.style.display = 'none';
+      return;
+    }
+
     // 성별 필터 기반 전체 데이터 사용
     const allRecords = this.ds.getAllRecords ? this.ds.getAllRecords() : this.ds.records || [];
-    const filtered = gender ? allRecords.filter(r => r.gender === gender) : allRecords;
+    const filtered = allRecords.filter(r => r.gender === gender);
     const okRecords = filtered.filter(r => r.status === 'OK' && r.finish != null);
 
     if (okRecords.length < 3) {
-      if (resultEl) resultEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛷</div><div class="empty-state-text">성별을 선택하고 예측을 실행하세요</div></div>';
+      if (resultEl) resultEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛷</div><div class="empty-state-text">데이터가 부족합니다</div></div>';
       if (compareEl) compareEl.style.display = 'none';
       return;
     }
@@ -477,12 +483,17 @@ class UIController {
     if (!resultEl) return;
 
     const gender = this.#el('pred-gender-filter')?.value || '';
+    if (!gender) {
+      resultEl.innerHTML = UIController.errorHTML('성별 미선택', '성별을 선택해주세요.');
+      return;
+    }
+
     const allRecords = this.ds.getAllRecords ? this.ds.getAllRecords() : this.ds.records || [];
-    const filtered = gender ? allRecords.filter(r => r.gender === gender) : allRecords;
+    const filtered = allRecords.filter(r => r.gender === gender);
     const okRecords = filtered.filter(r => r.status === 'OK' && r.finish != null);
 
     if (okRecords.length < 3) {
-      resultEl.innerHTML = UIController.errorHTML('데이터 부족', '성별을 선택하거나 데이터가 충분한지 확인하세요.');
+      resultEl.innerHTML = UIController.errorHTML('데이터 부족', '해당 성별의 데이터가 부족합니다.');
       return;
     }
 
