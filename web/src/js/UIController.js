@@ -476,8 +476,83 @@ class UIController {
         this.#runSimplePrediction(okRecords, stats, resultEl);
     }
 
+    // 트랙 인사이트 추가
+    const insightHTML = this.#getTrackInsightHTML(okRecords);
+    if (insightHTML) resultEl.insertAdjacentHTML('beforeend', insightHTML);
+
     if (this.notyf && resultEl.querySelector('.stat-card')) this.notyf.success('예측 완료');
     resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  #getTrackInsightHTML(okRecords) {
+    // 구간 시간 계산 (누적 → 구간별)
+    const sectionLabels = ['Start→Int.1', 'Int.1→Int.2', 'Int.2→Int.3', 'Int.3→Int.4', 'Int.4→Finish'];
+    const sectionData = [[], [], [], [], []];
+
+    for (const r of okRecords) {
+      const st = parseFloat(r.start_time);
+      const i1 = parseFloat(r.int1);
+      const i2 = parseFloat(r.int2);
+      const i3 = parseFloat(r.int3);
+      const i4 = parseFloat(r.int4);
+      const fin = parseFloat(r.finish);
+      if ([st, i1, i2, i3, i4, fin].some(v => !(v > 0))) continue;
+      const secs = [i1 - st, i2 - i1, i3 - i2, i4 - i3, fin - i4];
+      if (secs.some(v => v <= 0 || v > 20)) continue;
+      secs.forEach((v, idx) => sectionData[idx].push(v));
+    }
+
+    if (sectionData.every(d => d.length < 3)) return '';
+
+    // 각 구간 통계
+    const secStats = sectionData.map((vals, idx) => {
+      if (vals.length < 3) return null;
+      const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
+      const std = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length);
+      return { label: sectionLabels[idx], mean, std, n: vals.length };
+    });
+
+    // 가장 변동 큰 구간
+    let maxStdSec = null;
+    for (const s of secStats) {
+      if (s && (!maxStdSec || s.std > maxStdSec.std)) maxStdSec = s;
+    }
+
+    let html = '<div class="track-insight-panel" style="margin-top:1.2rem;padding:1rem;background:var(--c-surface,#f8f9fa);border-radius:12px;border:1px solid var(--c-border,#e0e0e0)">';
+    html += '<h4 style="margin:0 0 0.8rem 0;font-size:0.95rem">🏔️ 트랙 인사이트</h4>';
+
+    // 트랙 특성
+    html += '<div style="font-size:0.82rem;color:var(--c-text-muted,#666);margin-bottom:0.8rem;line-height:1.6">';
+    html += '<strong>트랙 특성:</strong><br>';
+    html += '• 총 길이 약 1,200m, 커브 16개<br>';
+    html += '• 고도차 118m (930.5m → 812.2m)<br>';
+    html += '• 가장 급한 커브: C2, C4 (R=17m)<br>';
+    html += '• 가장 완만한 커브: C10 (R=400m), C11 (R=500m)';
+    html += '</div>';
+
+    // 가장 변동 큰 구간
+    if (maxStdSec) {
+      html += '<div style="font-size:0.82rem;padding:0.6rem;background:var(--c-primary-50,#e3f2fd);border-radius:8px;margin-bottom:0.6rem">';
+      html += `📈 <strong>가장 변동 큰 구간:</strong> ${maxStdSec.label} (표준편차 ${maxStdSec.std.toFixed(3)}s)`;
+      html += '</div>';
+    }
+
+    // 구간별 평균 요약
+    html += '<details style="font-size:0.8rem;margin-top:0.4rem"><summary style="cursor:pointer;font-weight:600">구간별 평균 시간</summary>';
+    html += '<table style="width:100%;margin-top:0.4rem;font-size:0.78rem;border-collapse:collapse">';
+    html += '<thead><tr><th style="text-align:left;padding:3px 6px">구간</th><th>평균</th><th>표준편차</th><th>데이터</th></tr></thead><tbody>';
+    for (const s of secStats) {
+      if (!s) continue;
+      const isMax = s === maxStdSec;
+      html += `<tr${isMax ? ' style="background:var(--c-primary-50,#e3f2fd);font-weight:600"' : ''}>`;
+      html += `<td style="padding:3px 6px">${s.label}</td>`;
+      html += `<td style="text-align:center">${s.mean.toFixed(3)}s</td>`;
+      html += `<td style="text-align:center">±${s.std.toFixed(3)}s</td>`;
+      html += `<td style="text-align:center">${s.n}</td></tr>`;
+    }
+    html += '</tbody></table></details>';
+    html += '</div>';
+    return html;
   }
 
   #runSimplePrediction(okRecords, stats, resultEl) {
