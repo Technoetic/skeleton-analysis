@@ -349,55 +349,10 @@ class UIController {
   #renderPredictionTab() {
     const resultEl = this.#el('pred-result');
     const compareEl = document.getElementById('pred-model-compare');
-    const gender = this.#el('pred-gender-filter')?.value || '';
 
-    if (!gender) {
-      if (resultEl) resultEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛷</div><div class="empty-state-text">성별을 선택하고 예측을 실행하세요</div></div>';
-      if (compareEl) compareEl.style.display = 'none';
-      return;
-    }
-
-    // 성별 필터 기반 전체 데이터 사용
-    const allRecords = this.ds.getAllRecords ? this.ds.getAllRecords() : this.ds.records || [];
-    const filtered = allRecords.filter(r => r.gender === gender);
-    const okRecords = filtered.filter(r => r.status === 'OK' && r.finish != null);
-
-    if (okRecords.length < 3) {
-      if (resultEl) resultEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛷</div><div class="empty-state-text">데이터가 부족합니다</div></div>';
-      if (compareEl) compareEl.style.display = 'none';
-      return;
-    }
-
-    this.predModel.trainAll(okRecords);
-    const comparison = this.predModel.getModelComparison();
-
-    // 모델 비교 카드 표시
-    if (compareEl) {
-      compareEl.style.display = '';
-      compareEl.innerHTML = `
-        <h3 style="margin-top:0">📊 모델 비교</h3>
-        <div class="stats-grid">
-          ${this.#renderModelCard(comparison.simple, 'simple')}
-          ${this.#renderModelCard(comparison.poly, 'poly')}
-          ${this.#renderModelCard(comparison.multi, 'multi')}
-          ${this.#renderModelCard(comparison.segment, 'segment')}
-        </div>
-      `;
-    }
-
-    if (resultEl) {
-      const finishes = okRecords.map(r => parseFloat(r.finish)).filter(v => v > 0);
-      const best = finishes.length ? Math.min(...finishes) : 0;
-      const avg = finishes.length ? finishes.reduce((s, v) => s + v, 0) / finishes.length : 0;
-      resultEl.innerHTML = `
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-value">${okRecords.length}</div><div class="stat-label">학습 데이터</div></div>
-          <div class="stat-card"><div class="stat-value">${best.toFixed(3)}</div><div class="stat-label">최고 기록(초)</div></div>
-          <div class="stat-card"><div class="stat-value">${avg.toFixed(3)}</div><div class="stat-label">평균 기록(초)</div></div>
-        </div>
-      `;
-      UIController.animateCountUp(resultEl);
-    }
+    // 성별 변경 시 기존 결과만 초기화, 예측 실행 버튼을 눌러야 결과 표시
+    if (compareEl) compareEl.style.display = 'none';
+    if (resultEl) resultEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛷</div><div class="empty-state-text">성별을 선택하고 Start Time을 입력한 뒤 예측 실행 버튼을 누르세요</div></div>';
   }
 
   #renderModelCard(model, type) {
