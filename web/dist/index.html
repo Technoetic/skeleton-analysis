@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>스켈레톤 경기기록 분석</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛷</text></svg>">
-  
   <meta name="theme-color" content="#0f2b47">
   <style>@-webkit-keyframes notyf-fadeinup{0%{opacity:0;transform:translateY(25%)}to{opacity:1;transform:translateY(0)}}@keyframes notyf-fadeinup{0%{opacity:0;transform:translateY(25%)}to{opacity:1;transform:translateY(0)}}@-webkit-keyframes notyf-fadeinleft{0%{opacity:0;transform:translateX(25%)}to{opacity:1;transform:translateX(0)}}@keyframes notyf-fadeinleft{0%{opacity:0;transform:translateX(25%)}to{opacity:1;transform:translateX(0)}}@-webkit-keyframes notyf-fadeoutright{0%{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(25%)}}@keyframes notyf-fadeoutright{0%{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(25%)}}@-webkit-keyframes notyf-fadeoutdown{0%{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(25%)}}@keyframes notyf-fadeoutdown{0%{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(25%)}}@-webkit-keyframes ripple{0%{transform:scale(0) translateY(-45%) translateX(13%)}to{transform:scale(1) translateY(-45%) translateX(13%)}}@keyframes ripple{0%{transform:scale(0) translateY(-45%) translateX(13%)}to{transform:scale(1) translateY(-45%) translateX(13%)}}.notyf{position:fixed;top:0;left:0;height:100%;width:100%;color:#fff;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;pointer-events:none;box-sizing:border-box;padding:20px}.notyf__icon--error,.notyf__icon--success{height:21px;width:21px;background:#fff;border-radius:50%;display:block;margin:0 auto;position:relative}.notyf__icon--error:after,.notyf__icon--error:before{content:"";background:currentColor;display:block;position:absolute;width:3px;border-radius:3px;left:9px;height:12px;top:5px}.notyf__icon--error:after{transform:rotate(-45deg)}.notyf__icon--error:before{transform:rotate(45deg)}.notyf__icon--success:after,.notyf__icon--success:before{content:"";background:currentColor;display:block;position:absolute;width:3px;border-radius:3px}.notyf__icon--success:after{height:6px;transform:rotate(-45deg);top:9px;left:6px}.notyf__icon--success:before{height:11px;transform:rotate(45deg);top:5px;left:10px}.notyf__toast{display:block;overflow:hidden;pointer-events:auto;-webkit-animation:notyf-fadeinup .3s ease-in forwards;animation:notyf-fadeinup .3s ease-in forwards;box-shadow:0 3px 7px 0 rgba(0,0,0,.25);position:relative;padding:0 15px;border-radius:2px;max-width:300px;transform:translateY(25%);box-sizing:border-box;flex-shrink:0}.notyf__toast--disappear{transform:translateY(0);-webkit-animation:notyf-fadeoutdown .3s forwards;animation:notyf-fadeoutdown .3s forwards;-webkit-animation-delay:.25s;animation-delay:.25s}.notyf__toast--disappear .notyf__icon,.notyf__toast--disappear .notyf__message{-webkit-animation:notyf-fadeoutdown .3s forwards;animation:notyf-fadeoutdown .3s forwards;opacity:1;transform:translateY(0)}.notyf__toast--disappear .notyf__dismiss{-webkit-animation:notyf-fadeoutright .3s forwards;animation:notyf-fadeoutright .3s forwards;opacity:1;transform:translateX(0)}.notyf__toast--disappear .notyf__message{-webkit-animation-delay:.05s;animation-delay:.05s}.notyf__toast--upper{margin-bottom:20px}.notyf__toast--lower{margin-top:20px}.notyf__toast--dismissible .notyf__wrapper{padding-right:30px}.notyf__ripple{height:400px;width:400px;position:absolute;transform-origin:bottom right;right:0;top:0;border-radius:50%;transform:scale(0) translateY(-51%) translateX(13%);z-index:5;-webkit-animation:ripple .4s ease-out forwards;animation:ripple .4s ease-out forwards}.notyf__wrapper{display:flex;align-items:center;padding-top:17px;padding-bottom:17px;padding-right:15px;border-radius:3px;position:relative;z-index:10}.notyf__icon{width:22px;text-align:center;font-size:1.3em;opacity:0;-webkit-animation:notyf-fadeinup .3s forwards;animation:notyf-fadeinup .3s forwards;-webkit-animation-delay:.3s;animation-delay:.3s;margin-right:13px}.notyf__dismiss{position:absolute;top:0;right:0;height:100%;width:26px;margin-right:-15px;-webkit-animation:notyf-fadeinleft .3s forwards;animation:notyf-fadeinleft .3s forwards;-webkit-animation-delay:.35s;animation-delay:.35s;opacity:0}.notyf__dismiss-btn{background-color:rgba(0,0,0,.25);border:none;cursor:pointer;transition:opacity .2s ease,background-color .2s ease;outline:none;opacity:.35;height:100%;width:100%}.notyf__dismiss-btn:after,.notyf__dismiss-btn:before{content:"";background:#fff;height:12px;width:2px;border-radius:3px;position:absolute;left:calc(50% - 1px);top:calc(50% - 5px)}.notyf__dismiss-btn:after{transform:rotate(-45deg)}.notyf__dismiss-btn:before{transform:rotate(45deg)}.notyf__dismiss-btn:hover{opacity:.7;background-color:rgba(0,0,0,.15)}.notyf__dismiss-btn:active{opacity:.8}.notyf__message{vertical-align:middle;position:relative;opacity:0;-webkit-animation:notyf-fadeinup .3s forwards;animation:notyf-fadeinup .3s forwards;-webkit-animation-delay:.25s;animation-delay:.25s;line-height:1.5em}@media only screen and (max-width:480px){.notyf{padding:0}.notyf__ripple{height:600px;width:600px;-webkit-animation-duration:.5s;animation-duration:.5s}.notyf__toast{max-width:none;border-radius:0;box-shadow:0 -2px 7px 0 rgba(0,0,0,.13);width:100%}.notyf__dismiss{width:56px}}</style>
   <style>.animate__animated{-webkit-animation-duration:1s;animation-duration:1s;-webkit-animation-duration:var(--animate-duration);animation-duration:var(--animate-duration);-webkit-animation-fill-mode:both;animation-fill-mode:both}@-webkit-keyframes fadeIn{0%{opacity:0}to{opacity:1}}@keyframes fadeIn{0%{opacity:0}to{opacity:1}}.animate__fadeIn{-webkit-animation-name:fadeIn;animation-name:fadeIn}</style>
@@ -1855,6 +1854,7 @@ button.secondary-btn:active {
         <option value="simple">단순 선형</option>
         <option value="multi">다중 선형</option>
         <option value="segment">구간별 가중</option>
+        <option value="general">범용 MLR (논문용)</option>
       </select>
       <button id="pred-run-btn" class="primary-btn">예측 실행</button>
     </div>
@@ -1875,6 +1875,17 @@ button.secondary-btn:active {
         <label>구간4 (초):<input id="pred-m-seg4" type="number" step="0.001" placeholder="11.2" style="width:80px"></label>
       </div>
       <p style="font-size:0.8em;color:#888;margin-top:0.3rem">※ 구간 시간 = 해당 구간의 소요 시간 (누적 아님)</p>
+    </div>
+
+    <div id="pred-general-inputs" class="panel hidden">
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end">
+        <label>스타트 (초):<input id="pred-g-start" type="number" step="0.001" min="3" max="8" placeholder="5.12" style="width:80px"></label>
+        <label>얼음 온도 (°C):<input id="pred-g-icetemp" type="number" step="0.1" min="-15" max="0" placeholder="-7" value="-7" style="width:75px"></label>
+        <label>기온 (°C):<input id="pred-g-airtemp" type="number" step="0.1" min="-20" max="40" placeholder="5" style="width:75px"></label>
+        <label>습도 (%):<input id="pred-g-humidity" type="number" step="1" min="0" max="100" placeholder="60" style="width:65px"></label>
+        <label>기압 (hPa):<input id="pred-g-pressure" type="number" step="0.1" min="900" max="1100" placeholder="1013" style="width:80px"></label>
+      </div>
+      <p style="font-size:0.8em;color:#888;margin-top:0.3rem">※ 키·몸무게는 상단 입력란 사용 | 환경 변인 미입력 시 기본값 적용 | 공기밀도·이슬점은 자동 계산</p>
     </div>
 
     <div id="pred-segment-inputs" class="panel hidden">
@@ -2995,9 +3006,38 @@ const _supabaseReady = fetchRecords().then(data => {
     };
   }
 
+  // ─── 공기밀도 계산 (기온°C, 습도%, 기압hPa → kg/m³) ───
+  static calcAirDensity(airTemp, humidity, pressure) {
+    const T = airTemp + 273.15; // Kelvin
+    const Rd = 287.058; // 건조 공기 기체 상수
+    const Rv = 461.495; // 수증기 기체 상수
+    // 포화 수증기압 (Magnus 공식, hPa)
+    const es = 6.1078 * Math.exp((17.27 * airTemp) / (airTemp + 237.3));
+    const e = (humidity / 100) * es; // 실제 수증기압
+    const Pd = (pressure - e) * 100; // 건조 공기 분압 (Pa)
+    const Pv = e * 100; // 수증기 분압 (Pa)
+    return (Pd / (Rd * T)) + (Pv / (Rv * T));
+  }
+
+  // ─── 이슬점 계산 (기온°C, 습도% → °C) ───
+  static calcDewPoint(airTemp, humidity) {
+    const a = 17.27, b = 237.3;
+    const alpha = (a * airTemp) / (b + airTemp) + Math.log(humidity / 100);
+    return (b * alpha) / (a - alpha);
+  }
+
   // ─── 범용 다중선형회귀 (키, 몸무게, 환경, 스타트 → 피니시) ───
   trainGeneralMLR(records, input) {
-    const { height, weight, iceTemp, airTemp, humidity, startTime } = input;
+    const { height, weight, iceTemp, airTemp, humidity, pressure, startTime } = input;
+
+    // 파생 변수 계산
+    const airDensity = (airTemp != null && humidity != null && pressure != null)
+      ? PredictionModel.calcAirDensity(airTemp, humidity, pressure)
+      : 1.20; // 평창 고도 ~700m 기본값
+    const dewPoint = (airTemp != null && humidity != null)
+      ? PredictionModel.calcDewPoint(airTemp, humidity)
+      : null;
+    const frostRisk = (dewPoint != null && iceTemp != null) ? (dewPoint > iceTemp ? 1 : 0) : 0;
 
     // 1. 학습 데이터 필터링
     let rows = records
@@ -3026,8 +3066,8 @@ const _supabaseReady = fetchRecords().then(data => {
     if (rows.length < 10) return null;
 
     // 3. 독립 변수 구성
-    // 현재 DB에 키/몸무게가 없으므로 스타트타임 + 얼음온도로 학습
-    // 키/몸무게는 예측 시 사용자 입력값으로 보정 계수 적용
+    // DB에 키/몸무게/기상 데이터 없으므로 스타트타임 + 얼음온도로 학습
+    // 키/몸무게/공기밀도/이슬점은 예측 시 물리적 보정 계수로 적용
     const featureNames = ['start_time', 'ice_temp'];
     const X = rows.map(r => [r.start_time, r.ice_temp]);
     const y = rows.map(r => r.finish);
@@ -3151,15 +3191,52 @@ const _supabaseReady = fetchRecords().then(data => {
     }
 
     // 10. 예측값 계산
-    const inputFeatures = [startTime, iceTemp];
+    const inputFeatures = [startTime, iceTemp != null ? iceTemp : -7];
     let predicted = coeffs[0];
     for (let j = 0; j < p; j++) predicted += coeffs[j + 1] * inputFeatures[j];
+
+    // 11. 물리적 보정 계수 적용 (선행연구 기반)
+    // Vracas et al.: 총질량 증가 → 중력가속 → 기록 단축
+    // Bayreuth: 항력 F_D = 0.5ρv²CDA → 공기밀도 변화 영향
+    const corrections = [];
+    let totalCorrection = 0;
+
+    // 키/체중 보정: 총질량(선수+썰매) 기반 중력 효과
+    // 규정 총질량 한도: 남자 120kg, 여자 107kg (썰매 ~33kg)
+    // 선행연구(Vracas): 1kg 증가 ≈ 0.01~0.02초 단축 (트랙 특성에 따라 다름)
+    if (weight != null && weight > 0) {
+      const refWeight = 75; // 학습 데이터 기준 평균 체중 추정
+      const weightDelta = weight - refWeight;
+      const weightEffect = -0.015 * weightDelta; // 1kg당 약 0.015초 영향
+      totalCorrection += weightEffect;
+      corrections.push({ name: '체중 보정', value: weightEffect, detail: `${weight}kg (기준 ${refWeight}kg 대비 ${weightDelta > 0 ? '+' : ''}${weightDelta}kg)` });
+    }
+
+    // 공기밀도 보정: F_D = 0.5ρv²CDA
+    // 기준 공기밀도: 1.20 kg/m³ (평창 고도 ~700m, 기온 ~5°C)
+    // 밀도 1% 변화 ≈ 항력 1% 변화 ≈ ~0.02초 영향
+    const refDensity = 1.20;
+    if (airDensity !== refDensity) {
+      const densityRatio = (airDensity - refDensity) / refDensity;
+      const densityEffect = 0.02 * densityRatio * 100; // 1% 당 0.02초
+      totalCorrection += densityEffect;
+      corrections.push({ name: '공기밀도 보정', value: densityEffect, detail: `${airDensity.toFixed(4)} kg/m³ (기준 ${refDensity} 대비 ${(densityRatio*100).toFixed(2)}%)` });
+    }
+
+    // 서리 위험 보정: 이슬점 > 빙면온도 → 서리 형성 → 마찰 증가
+    // Poirier F.A.S.T.: 서리 발생 시 마찰계수 증가 → ~0.1~0.3초 영향
+    if (frostRisk) {
+      const frostEffect = 0.15;
+      totalCorrection += frostEffect;
+      corrections.push({ name: '서리 위험 보정', value: frostEffect, detail: `이슬점(${dewPoint.toFixed(1)}°C) > 빙면(${iceTemp}°C) → 서리 가능` });
+    }
+
+    const finalPredicted = predicted + totalCorrection;
 
     // leverage 기반 신뢰구간
     const xAug = [1, ...inputFeatures];
     const h = this.#computeLeverage(xAug, XtXinv);
     const se = residualStd * Math.sqrt(1 + h);
-    // 95% CI (≈ 1.96σ)
     const tCrit = 1.96;
 
     // 실제 vs 예측 데이터 (차트용)
@@ -3172,9 +3249,12 @@ const _supabaseReady = fetchRecords().then(data => {
 
     return {
       prediction: {
-        predicted: Math.round(predicted * 1000) / 1000,
-        lower: Math.round((predicted - tCrit * se) * 1000) / 1000,
-        upper: Math.round((predicted + tCrit * se) * 1000) / 1000,
+        predicted: Math.round(finalPredicted * 1000) / 1000,
+        basePredicted: Math.round(predicted * 1000) / 1000,
+        lower: Math.round((finalPredicted - tCrit * se) * 1000) / 1000,
+        upper: Math.round((finalPredicted + tCrit * se) * 1000) / 1000,
+        corrections,
+        totalCorrection: Math.round(totalCorrection * 1000) / 1000,
       },
       modelInfo: {
         n: rows.length,
@@ -3191,6 +3271,12 @@ const _supabaseReady = fetchRecords().then(data => {
         corrMatrix,
         preprocessing: { initial: initialCount, outlierRemoved, final: rows.length },
         actualVsPred,
+      },
+      environment: {
+        airDensity: Math.round(airDensity * 10000) / 10000,
+        dewPoint: dewPoint != null ? Math.round(dewPoint * 10) / 10 : null,
+        frostRisk,
+        iceTemp: iceTemp != null ? iceTemp : -7,
       },
     };
   }
@@ -6371,6 +6457,7 @@ class TableRenderer {
       { el: document.getElementById('pred-multi-inputs'), model: 'multi' },
       { el: document.getElementById('pred-segment-inputs'), model: 'segment' },
       { el: document.getElementById('pred-ensemble-inputs'), model: 'ensemble' },
+      { el: document.getElementById('pred-general-inputs'), model: 'general' },
     ];
 
     for (const { el, model } of panels) {
@@ -6447,6 +6534,9 @@ class TableRenderer {
         break;
       case 'segment':
         this.#runSegmentPrediction(okRecords, resultEl);
+        break;
+      case 'general':
+        this.#runGeneralMLR(okRecords, resultEl);
         break;
       default:
         this.#runSimplePrediction(okRecords, stats, resultEl);
@@ -6649,6 +6739,161 @@ class TableRenderer {
     `;
     UIController.animateCountUp(resultEl);
     this.charts.renderMultiPredChart('pred-chart', okRecords, this.predModel, pred);
+  }
+
+  #runGeneralMLR(okRecords, resultEl) {
+    const startTime = parseFloat(document.getElementById('pred-g-start')?.value);
+    const height = parseFloat(document.getElementById('pred-height')?.value);
+    const weight = parseFloat(document.getElementById('pred-weight')?.value);
+    const iceTemp = parseFloat(document.getElementById('pred-g-icetemp')?.value);
+    const airTemp = parseFloat(document.getElementById('pred-g-airtemp')?.value);
+    const humidity = parseFloat(document.getElementById('pred-g-humidity')?.value);
+    const pressure = parseFloat(document.getElementById('pred-g-pressure')?.value);
+
+    if (isNaN(startTime)) {
+      resultEl.innerHTML = UIController.errorHTML('스타트 시간 필요', '스타트 시간(초)을 입력해주세요.');
+      return;
+    }
+    if (startTime < UIController.VALIDATION.START_MIN || startTime > UIController.VALIDATION.START_MAX) {
+      resultEl.innerHTML = UIController.errorHTML('Start Time 범위 초과', `입력값: ${startTime.toFixed(3)}초<br>올바른 범위: 3.0 ~ 10.0초`);
+      return;
+    }
+
+    const input = {
+      startTime,
+      height: isNaN(height) ? null : height,
+      weight: isNaN(weight) ? null : weight,
+      iceTemp: isNaN(iceTemp) ? -7 : iceTemp,
+      airTemp: isNaN(airTemp) ? 5 : airTemp,
+      humidity: isNaN(humidity) ? 60 : humidity,
+      pressure: isNaN(pressure) ? 1013 : pressure,
+    };
+
+    const result = this.predModel.trainGeneralMLR(okRecords, input);
+    if (!result) {
+      resultEl.innerHTML = UIController.errorHTML('데이터 부족', '범용 MLR 모델 학습에 충분한 데이터가 없습니다 (최소 10건).');
+      return;
+    }
+
+    const { prediction, modelInfo, environment } = result;
+    const env = environment;
+    const mi = modelInfo;
+
+    // 보정 내역 테이블
+    let corrHTML = '';
+    if (prediction.corrections.length > 0) {
+      corrHTML = `
+        <details open>
+          <summary>물리적 보정 내역 (선행연구 기반)</summary>
+          <table>
+            <thead><tr><th>보정 항목</th><th>보정값(초)</th><th>근거</th></tr></thead>
+            <tbody>
+            ${prediction.corrections.map(c => `
+              <tr><td>${c.name}</td><td>${c.value > 0 ? '+' : ''}${c.value.toFixed(3)}</td><td style="font-size:0.85em">${c.detail}</td></tr>
+            `).join('')}
+            <tr style="font-weight:bold;border-top:2px solid var(--c-border)"><td>합계</td><td>${prediction.totalCorrection > 0 ? '+' : ''}${prediction.totalCorrection.toFixed(3)}</td><td></td></tr>
+            </tbody>
+          </table>
+        </details>`;
+    }
+
+    // 환경 정보
+    const envHTML = `
+      <details>
+        <summary>환경 변수 계산 결과</summary>
+        <div class="stats-grid" style="margin-top:0.5rem">
+          <div class="stat-card"><div class="stat-value">${env.airDensity}</div><div class="stat-label">공기밀도 (kg/m³)</div></div>
+          <div class="stat-card"><div class="stat-value">${env.dewPoint != null ? env.dewPoint + '°C' : '-'}</div><div class="stat-label">이슬점</div></div>
+          <div class="stat-card"><div class="stat-value">${env.iceTemp}°C</div><div class="stat-label">빙면 온도</div></div>
+          <div class="stat-card"><div class="stat-value">${env.frostRisk ? '⚠️ 위험' : '✅ 정상'}</div><div class="stat-label">서리 위험</div></div>
+        </div>
+      </details>`;
+
+    // 상관관계 행렬
+    const corrMatHTML = mi.corrMatrix ? `
+      <details>
+        <summary>상관관계 행렬 (Pearson r)</summary>
+        <table style="font-size:0.85em">
+          <thead><tr><th></th>${mi.corrLabels.map(l => `<th>${l}</th>`).join('')}</tr></thead>
+          <tbody>
+          ${mi.corrLabels.map((label, i) => `
+            <tr><td><strong>${label}</strong></td>${mi.corrMatrix[i].map((v, j) => {
+              const abs = Math.abs(v);
+              const color = i === j ? '' : abs > 0.7 ? 'color:#e74c3c;font-weight:bold' : abs > 0.4 ? 'color:#f39c12' : '';
+              return `<td style="${color}">${v.toFixed(3)}</td>`;
+            }).join('')}</tr>
+          `).join('')}
+          </tbody>
+        </table>
+      </details>` : '';
+
+    // 회귀 계수 상세
+    const coeffHTML = `
+      <details>
+        <summary>회귀 계수 + 진단 지표</summary>
+        <table style="font-size:0.85em">
+          <thead><tr><th>변수</th><th>B</th><th>β</th><th>t</th><th>p</th><th>VIF</th></tr></thead>
+          <tbody>
+          ${mi.coeffDetails.map(c => {
+            const pStar = c.p < 0.001 ? '***' : c.p < 0.01 ? '**' : c.p < 0.05 ? '*' : '';
+            return `<tr>
+              <td>${c.name}</td>
+              <td>${c.B.toFixed(4)}</td>
+              <td>${c.beta != null ? c.beta.toFixed(4) : '-'}</td>
+              <td>${c.t.toFixed(3)}</td>
+              <td>${c.p < 0.001 ? '< .001' : c.p.toFixed(3)}${pStar}</td>
+              <td>${c.vif != null ? (c.vif > 10 ? `<span style="color:red;font-weight:bold">${c.vif}</span>` : c.vif.toFixed(2)) : '-'}</td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+        ${mi.durbinWatson != null ? `<p style="margin-top:0.5rem;font-size:0.85em">Durbin-Watson: <strong>${mi.durbinWatson.toFixed(3)}</strong> ${mi.durbinWatson < 1.5 ? '⚠️ 양의 자기상관' : mi.durbinWatson > 2.5 ? '⚠️ 음의 자기상관' : '✅ 정상'}</p>` : ''}
+        <p style="font-size:0.85em;color:var(--c-text-muted)">데이터 전처리: 전체 ${mi.preprocessing.initial}건 → 이상치 ${mi.preprocessing.outlierRemoved}건 제거 → 최종 ${mi.preprocessing.final}건</p>
+      </details>`;
+
+    // 기술 통계량
+    const descHTML = mi.descriptive ? `
+      <details>
+        <summary>기술 통계량</summary>
+        <table style="font-size:0.85em">
+          <thead><tr><th>변수</th><th>M</th><th>SD</th><th>Min</th><th>Max</th></tr></thead>
+          <tbody>
+          ${mi.descriptive.map(d => `
+            <tr><td>${d.name}</td><td>${d.mean.toFixed(3)}</td><td>${d.std.toFixed(3)}</td><td>${d.min.toFixed(3)}</td><td>${d.max.toFixed(3)}</td></tr>
+          `).join('')}
+          </tbody>
+        </table>
+      </details>` : '';
+
+    // 입력 요약
+    const inputParts = [`Start=${startTime.toFixed(3)}`];
+    if (input.height) inputParts.push(`키=${input.height}cm`);
+    if (input.weight) inputParts.push(`몸무게=${input.weight}kg`);
+    inputParts.push(`기온=${input.airTemp}°C`, `습도=${input.humidity}%`, `기압=${input.pressure}hPa`, `빙면=${input.iceTemp}°C`);
+
+    resultEl.innerHTML = `
+      <h3>📊 범용 MLR 예측 결과 (논문용)</h3>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value">${mi.n}</div><div class="stat-label">학습 데이터</div></div>
+        <div class="stat-card"><div class="stat-value">${mi.r2.toFixed(3)}</div><div class="stat-label">R²</div></div>
+        <div class="stat-card"><div class="stat-value">${mi.adjR2.toFixed(3)}</div><div class="stat-label">Adj R²</div></div>
+        <div class="stat-card"><div class="stat-value">±${mi.rmse.toFixed(3)}</div><div class="stat-label">RMSE(초)</div></div>
+        <div class="stat-card"><div class="stat-value">±${mi.mae.toFixed(3)}</div><div class="stat-label">MAE(초)</div></div>
+      </div>
+      <div class="result-highlight">
+        <p style="font-size:0.85em">${inputParts.join(' | ')}</p>
+        <p class="pred-value">기본 예측: <strong>${prediction.basePredicted.toFixed(3)}초</strong></p>
+        ${prediction.totalCorrection !== 0 ? `<p class="pred-value">보정 후 예측: <strong>${prediction.predicted.toFixed(3)}초</strong> (${prediction.totalCorrection > 0 ? '+' : ''}${prediction.totalCorrection.toFixed(3)})</p>` : ''}
+        <p style="color:var(--c-text-muted)">95% 신뢰구간: ${prediction.lower.toFixed(3)} ~ ${prediction.upper.toFixed(3)}초</p>
+        <p class="confidence-hint">${this.#getConfidenceHint(mi.r2, mi.n)}</p>
+      </div>
+      ${corrHTML}
+      ${envHTML}
+      ${coeffHTML}
+      ${corrMatHTML}
+      ${descHTML}
+    `;
+    UIController.animateCountUp(resultEl);
   }
 
   #runSegmentPrediction(okRecords, resultEl) {

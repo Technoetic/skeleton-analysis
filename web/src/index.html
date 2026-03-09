@@ -56,6 +56,7 @@
         <option value="simple">단순 선형</option>
         <option value="multi">다중 선형</option>
         <option value="segment">구간별 가중</option>
+        <option value="general">범용 MLR (논문용)</option>
       </select>
       <button id="pred-run-btn" class="primary-btn">예측 실행</button>
     </div>
@@ -76,6 +77,17 @@
         <label>구간4 (초):<input id="pred-m-seg4" type="number" step="0.001" placeholder="11.2" style="width:80px"></label>
       </div>
       <p style="font-size:0.8em;color:#888;margin-top:0.3rem">※ 구간 시간 = 해당 구간의 소요 시간 (누적 아님)</p>
+    </div>
+
+    <div id="pred-general-inputs" class="panel hidden">
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end">
+        <label>스타트 (초):<input id="pred-g-start" type="number" step="0.001" min="3" max="8" placeholder="5.12" style="width:80px"></label>
+        <label>얼음 온도 (°C):<input id="pred-g-icetemp" type="number" step="0.1" min="-15" max="0" placeholder="-7" value="-7" style="width:75px"></label>
+        <label>기온 (°C):<input id="pred-g-airtemp" type="number" step="0.1" min="-20" max="40" placeholder="5" style="width:75px"></label>
+        <label>습도 (%):<input id="pred-g-humidity" type="number" step="1" min="0" max="100" placeholder="60" style="width:65px"></label>
+        <label>기압 (hPa):<input id="pred-g-pressure" type="number" step="0.1" min="900" max="1100" placeholder="1013" style="width:80px"></label>
+      </div>
+      <p style="font-size:0.8em;color:#888;margin-top:0.3rem">※ 키·몸무게는 상단 입력란 사용 | 환경 변인 미입력 시 기본값 적용 | 공기밀도·이슬점은 자동 계산</p>
     </div>
 
     <div id="pred-segment-inputs" class="panel hidden">

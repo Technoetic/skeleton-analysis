@@ -395,6 +395,7 @@ class UIController {
       { el: document.getElementById('pred-multi-inputs'), model: 'multi' },
       { el: document.getElementById('pred-segment-inputs'), model: 'segment' },
       { el: document.getElementById('pred-ensemble-inputs'), model: 'ensemble' },
+      { el: document.getElementById('pred-general-inputs'), model: 'general' },
     ];
 
     for (const { el, model } of panels) {
@@ -471,6 +472,9 @@ class UIController {
         break;
       case 'segment':
         this.#runSegmentPrediction(okRecords, resultEl);
+        break;
+      case 'general':
+        this.#runGeneralMLR(okRecords, resultEl);
         break;
       default:
         this.#runSimplePrediction(okRecords, stats, resultEl);
@@ -673,6 +677,161 @@ class UIController {
     `;
     UIController.animateCountUp(resultEl);
     this.charts.renderMultiPredChart('pred-chart', okRecords, this.predModel, pred);
+  }
+
+  #runGeneralMLR(okRecords, resultEl) {
+    const startTime = parseFloat(document.getElementById('pred-g-start')?.value);
+    const height = parseFloat(document.getElementById('pred-height')?.value);
+    const weight = parseFloat(document.getElementById('pred-weight')?.value);
+    const iceTemp = parseFloat(document.getElementById('pred-g-icetemp')?.value);
+    const airTemp = parseFloat(document.getElementById('pred-g-airtemp')?.value);
+    const humidity = parseFloat(document.getElementById('pred-g-humidity')?.value);
+    const pressure = parseFloat(document.getElementById('pred-g-pressure')?.value);
+
+    if (isNaN(startTime)) {
+      resultEl.innerHTML = UIController.errorHTML('스타트 시간 필요', '스타트 시간(초)을 입력해주세요.');
+      return;
+    }
+    if (startTime < UIController.VALIDATION.START_MIN || startTime > UIController.VALIDATION.START_MAX) {
+      resultEl.innerHTML = UIController.errorHTML('Start Time 범위 초과', `입력값: ${startTime.toFixed(3)}초<br>올바른 범위: 3.0 ~ 10.0초`);
+      return;
+    }
+
+    const input = {
+      startTime,
+      height: isNaN(height) ? null : height,
+      weight: isNaN(weight) ? null : weight,
+      iceTemp: isNaN(iceTemp) ? -7 : iceTemp,
+      airTemp: isNaN(airTemp) ? 5 : airTemp,
+      humidity: isNaN(humidity) ? 60 : humidity,
+      pressure: isNaN(pressure) ? 1013 : pressure,
+    };
+
+    const result = this.predModel.trainGeneralMLR(okRecords, input);
+    if (!result) {
+      resultEl.innerHTML = UIController.errorHTML('데이터 부족', '범용 MLR 모델 학습에 충분한 데이터가 없습니다 (최소 10건).');
+      return;
+    }
+
+    const { prediction, modelInfo, environment } = result;
+    const env = environment;
+    const mi = modelInfo;
+
+    // 보정 내역 테이블
+    let corrHTML = '';
+    if (prediction.corrections.length > 0) {
+      corrHTML = `
+        <details open>
+          <summary>물리적 보정 내역 (선행연구 기반)</summary>
+          <table>
+            <thead><tr><th>보정 항목</th><th>보정값(초)</th><th>근거</th></tr></thead>
+            <tbody>
+            ${prediction.corrections.map(c => `
+              <tr><td>${c.name}</td><td>${c.value > 0 ? '+' : ''}${c.value.toFixed(3)}</td><td style="font-size:0.85em">${c.detail}</td></tr>
+            `).join('')}
+            <tr style="font-weight:bold;border-top:2px solid var(--c-border)"><td>합계</td><td>${prediction.totalCorrection > 0 ? '+' : ''}${prediction.totalCorrection.toFixed(3)}</td><td></td></tr>
+            </tbody>
+          </table>
+        </details>`;
+    }
+
+    // 환경 정보
+    const envHTML = `
+      <details>
+        <summary>환경 변수 계산 결과</summary>
+        <div class="stats-grid" style="margin-top:0.5rem">
+          <div class="stat-card"><div class="stat-value">${env.airDensity}</div><div class="stat-label">공기밀도 (kg/m³)</div></div>
+          <div class="stat-card"><div class="stat-value">${env.dewPoint != null ? env.dewPoint + '°C' : '-'}</div><div class="stat-label">이슬점</div></div>
+          <div class="stat-card"><div class="stat-value">${env.iceTemp}°C</div><div class="stat-label">빙면 온도</div></div>
+          <div class="stat-card"><div class="stat-value">${env.frostRisk ? '⚠️ 위험' : '✅ 정상'}</div><div class="stat-label">서리 위험</div></div>
+        </div>
+      </details>`;
+
+    // 상관관계 행렬
+    const corrMatHTML = mi.corrMatrix ? `
+      <details>
+        <summary>상관관계 행렬 (Pearson r)</summary>
+        <table style="font-size:0.85em">
+          <thead><tr><th></th>${mi.corrLabels.map(l => `<th>${l}</th>`).join('')}</tr></thead>
+          <tbody>
+          ${mi.corrLabels.map((label, i) => `
+            <tr><td><strong>${label}</strong></td>${mi.corrMatrix[i].map((v, j) => {
+              const abs = Math.abs(v);
+              const color = i === j ? '' : abs > 0.7 ? 'color:#e74c3c;font-weight:bold' : abs > 0.4 ? 'color:#f39c12' : '';
+              return `<td style="${color}">${v.toFixed(3)}</td>`;
+            }).join('')}</tr>
+          `).join('')}
+          </tbody>
+        </table>
+      </details>` : '';
+
+    // 회귀 계수 상세
+    const coeffHTML = `
+      <details>
+        <summary>회귀 계수 + 진단 지표</summary>
+        <table style="font-size:0.85em">
+          <thead><tr><th>변수</th><th>B</th><th>β</th><th>t</th><th>p</th><th>VIF</th></tr></thead>
+          <tbody>
+          ${mi.coeffDetails.map(c => {
+            const pStar = c.p < 0.001 ? '***' : c.p < 0.01 ? '**' : c.p < 0.05 ? '*' : '';
+            return `<tr>
+              <td>${c.name}</td>
+              <td>${c.B.toFixed(4)}</td>
+              <td>${c.beta != null ? c.beta.toFixed(4) : '-'}</td>
+              <td>${c.t.toFixed(3)}</td>
+              <td>${c.p < 0.001 ? '< .001' : c.p.toFixed(3)}${pStar}</td>
+              <td>${c.vif != null ? (c.vif > 10 ? `<span style="color:red;font-weight:bold">${c.vif}</span>` : c.vif.toFixed(2)) : '-'}</td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+        ${mi.durbinWatson != null ? `<p style="margin-top:0.5rem;font-size:0.85em">Durbin-Watson: <strong>${mi.durbinWatson.toFixed(3)}</strong> ${mi.durbinWatson < 1.5 ? '⚠️ 양의 자기상관' : mi.durbinWatson > 2.5 ? '⚠️ 음의 자기상관' : '✅ 정상'}</p>` : ''}
+        <p style="font-size:0.85em;color:var(--c-text-muted)">데이터 전처리: 전체 ${mi.preprocessing.initial}건 → 이상치 ${mi.preprocessing.outlierRemoved}건 제거 → 최종 ${mi.preprocessing.final}건</p>
+      </details>`;
+
+    // 기술 통계량
+    const descHTML = mi.descriptive ? `
+      <details>
+        <summary>기술 통계량</summary>
+        <table style="font-size:0.85em">
+          <thead><tr><th>변수</th><th>M</th><th>SD</th><th>Min</th><th>Max</th></tr></thead>
+          <tbody>
+          ${mi.descriptive.map(d => `
+            <tr><td>${d.name}</td><td>${d.mean.toFixed(3)}</td><td>${d.std.toFixed(3)}</td><td>${d.min.toFixed(3)}</td><td>${d.max.toFixed(3)}</td></tr>
+          `).join('')}
+          </tbody>
+        </table>
+      </details>` : '';
+
+    // 입력 요약
+    const inputParts = [`Start=${startTime.toFixed(3)}`];
+    if (input.height) inputParts.push(`키=${input.height}cm`);
+    if (input.weight) inputParts.push(`몸무게=${input.weight}kg`);
+    inputParts.push(`기온=${input.airTemp}°C`, `습도=${input.humidity}%`, `기압=${input.pressure}hPa`, `빙면=${input.iceTemp}°C`);
+
+    resultEl.innerHTML = `
+      <h3>📊 범용 MLR 예측 결과 (논문용)</h3>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value">${mi.n}</div><div class="stat-label">학습 데이터</div></div>
+        <div class="stat-card"><div class="stat-value">${mi.r2.toFixed(3)}</div><div class="stat-label">R²</div></div>
+        <div class="stat-card"><div class="stat-value">${mi.adjR2.toFixed(3)}</div><div class="stat-label">Adj R²</div></div>
+        <div class="stat-card"><div class="stat-value">±${mi.rmse.toFixed(3)}</div><div class="stat-label">RMSE(초)</div></div>
+        <div class="stat-card"><div class="stat-value">±${mi.mae.toFixed(3)}</div><div class="stat-label">MAE(초)</div></div>
+      </div>
+      <div class="result-highlight">
+        <p style="font-size:0.85em">${inputParts.join(' | ')}</p>
+        <p class="pred-value">기본 예측: <strong>${prediction.basePredicted.toFixed(3)}초</strong></p>
+        ${prediction.totalCorrection !== 0 ? `<p class="pred-value">보정 후 예측: <strong>${prediction.predicted.toFixed(3)}초</strong> (${prediction.totalCorrection > 0 ? '+' : ''}${prediction.totalCorrection.toFixed(3)})</p>` : ''}
+        <p style="color:var(--c-text-muted)">95% 신뢰구간: ${prediction.lower.toFixed(3)} ~ ${prediction.upper.toFixed(3)}초</p>
+        <p class="confidence-hint">${this.#getConfidenceHint(mi.r2, mi.n)}</p>
+      </div>
+      ${corrHTML}
+      ${envHTML}
+      ${coeffHTML}
+      ${corrMatHTML}
+      ${descHTML}
+    `;
+    UIController.animateCountUp(resultEl);
   }
 
   #runSegmentPrediction(okRecords, resultEl) {

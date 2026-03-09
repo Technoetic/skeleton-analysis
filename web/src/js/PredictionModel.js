@@ -562,9 +562,38 @@ class PredictionModel {
     };
   }
 
+  // ─── 공기밀도 계산 (기온°C, 습도%, 기압hPa → kg/m³) ───
+  static calcAirDensity(airTemp, humidity, pressure) {
+    const T = airTemp + 273.15; // Kelvin
+    const Rd = 287.058; // 건조 공기 기체 상수
+    const Rv = 461.495; // 수증기 기체 상수
+    // 포화 수증기압 (Magnus 공식, hPa)
+    const es = 6.1078 * Math.exp((17.27 * airTemp) / (airTemp + 237.3));
+    const e = (humidity / 100) * es; // 실제 수증기압
+    const Pd = (pressure - e) * 100; // 건조 공기 분압 (Pa)
+    const Pv = e * 100; // 수증기 분압 (Pa)
+    return (Pd / (Rd * T)) + (Pv / (Rv * T));
+  }
+
+  // ─── 이슬점 계산 (기온°C, 습도% → °C) ───
+  static calcDewPoint(airTemp, humidity) {
+    const a = 17.27, b = 237.3;
+    const alpha = (a * airTemp) / (b + airTemp) + Math.log(humidity / 100);
+    return (b * alpha) / (a - alpha);
+  }
+
   // ─── 범용 다중선형회귀 (키, 몸무게, 환경, 스타트 → 피니시) ───
   trainGeneralMLR(records, input) {
-    const { height, weight, iceTemp, airTemp, humidity, startTime } = input;
+    const { height, weight, iceTemp, airTemp, humidity, pressure, startTime } = input;
+
+    // 파생 변수 계산
+    const airDensity = (airTemp != null && humidity != null && pressure != null)
+      ? PredictionModel.calcAirDensity(airTemp, humidity, pressure)
+      : 1.20; // 평창 고도 ~700m 기본값
+    const dewPoint = (airTemp != null && humidity != null)
+      ? PredictionModel.calcDewPoint(airTemp, humidity)
+      : null;
+    const frostRisk = (dewPoint != null && iceTemp != null) ? (dewPoint > iceTemp ? 1 : 0) : 0;
 
     // 1. 학습 데이터 필터링
     let rows = records
@@ -593,8 +622,8 @@ class PredictionModel {
     if (rows.length < 10) return null;
 
     // 3. 독립 변수 구성
-    // 현재 DB에 키/몸무게가 없으므로 스타트타임 + 얼음온도로 학습
-    // 키/몸무게는 예측 시 사용자 입력값으로 보정 계수 적용
+    // DB에 키/몸무게/기상 데이터 없으므로 스타트타임 + 얼음온도로 학습
+    // 키/몸무게/공기밀도/이슬점은 예측 시 물리적 보정 계수로 적용
     const featureNames = ['start_time', 'ice_temp'];
     const X = rows.map(r => [r.start_time, r.ice_temp]);
     const y = rows.map(r => r.finish);
@@ -718,15 +747,52 @@ class PredictionModel {
     }
 
     // 10. 예측값 계산
-    const inputFeatures = [startTime, iceTemp];
+    const inputFeatures = [startTime, iceTemp != null ? iceTemp : -7];
     let predicted = coeffs[0];
     for (let j = 0; j < p; j++) predicted += coeffs[j + 1] * inputFeatures[j];
+
+    // 11. 물리적 보정 계수 적용 (선행연구 기반)
+    // Vracas et al.: 총질량 증가 → 중력가속 → 기록 단축
+    // Bayreuth: 항력 F_D = 0.5ρv²CDA → 공기밀도 변화 영향
+    const corrections = [];
+    let totalCorrection = 0;
+
+    // 키/체중 보정: 총질량(선수+썰매) 기반 중력 효과
+    // 규정 총질량 한도: 남자 120kg, 여자 107kg (썰매 ~33kg)
+    // 선행연구(Vracas): 1kg 증가 ≈ 0.01~0.02초 단축 (트랙 특성에 따라 다름)
+    if (weight != null && weight > 0) {
+      const refWeight = 75; // 학습 데이터 기준 평균 체중 추정
+      const weightDelta = weight - refWeight;
+      const weightEffect = -0.015 * weightDelta; // 1kg당 약 0.015초 영향
+      totalCorrection += weightEffect;
+      corrections.push({ name: '체중 보정', value: weightEffect, detail: `${weight}kg (기준 ${refWeight}kg 대비 ${weightDelta > 0 ? '+' : ''}${weightDelta}kg)` });
+    }
+
+    // 공기밀도 보정: F_D = 0.5ρv²CDA
+    // 기준 공기밀도: 1.20 kg/m³ (평창 고도 ~700m, 기온 ~5°C)
+    // 밀도 1% 변화 ≈ 항력 1% 변화 ≈ ~0.02초 영향
+    const refDensity = 1.20;
+    if (airDensity !== refDensity) {
+      const densityRatio = (airDensity - refDensity) / refDensity;
+      const densityEffect = 0.02 * densityRatio * 100; // 1% 당 0.02초
+      totalCorrection += densityEffect;
+      corrections.push({ name: '공기밀도 보정', value: densityEffect, detail: `${airDensity.toFixed(4)} kg/m³ (기준 ${refDensity} 대비 ${(densityRatio*100).toFixed(2)}%)` });
+    }
+
+    // 서리 위험 보정: 이슬점 > 빙면온도 → 서리 형성 → 마찰 증가
+    // Poirier F.A.S.T.: 서리 발생 시 마찰계수 증가 → ~0.1~0.3초 영향
+    if (frostRisk) {
+      const frostEffect = 0.15;
+      totalCorrection += frostEffect;
+      corrections.push({ name: '서리 위험 보정', value: frostEffect, detail: `이슬점(${dewPoint.toFixed(1)}°C) > 빙면(${iceTemp}°C) → 서리 가능` });
+    }
+
+    const finalPredicted = predicted + totalCorrection;
 
     // leverage 기반 신뢰구간
     const xAug = [1, ...inputFeatures];
     const h = this.#computeLeverage(xAug, XtXinv);
     const se = residualStd * Math.sqrt(1 + h);
-    // 95% CI (≈ 1.96σ)
     const tCrit = 1.96;
 
     // 실제 vs 예측 데이터 (차트용)
@@ -739,9 +805,12 @@ class PredictionModel {
 
     return {
       prediction: {
-        predicted: Math.round(predicted * 1000) / 1000,
-        lower: Math.round((predicted - tCrit * se) * 1000) / 1000,
-        upper: Math.round((predicted + tCrit * se) * 1000) / 1000,
+        predicted: Math.round(finalPredicted * 1000) / 1000,
+        basePredicted: Math.round(predicted * 1000) / 1000,
+        lower: Math.round((finalPredicted - tCrit * se) * 1000) / 1000,
+        upper: Math.round((finalPredicted + tCrit * se) * 1000) / 1000,
+        corrections,
+        totalCorrection: Math.round(totalCorrection * 1000) / 1000,
       },
       modelInfo: {
         n: rows.length,
@@ -758,6 +827,12 @@ class PredictionModel {
         corrMatrix,
         preprocessing: { initial: initialCount, outlierRemoved, final: rows.length },
         actualVsPred,
+      },
+      environment: {
+        airDensity: Math.round(airDensity * 10000) / 10000,
+        dewPoint: dewPoint != null ? Math.round(dewPoint * 10) / 10 : null,
+        frostRisk,
+        iceTemp: iceTemp != null ? iceTemp : -7,
       },
     };
   }
