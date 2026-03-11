@@ -120,12 +120,6 @@
         <div class="dash-card" style="flex:1;display:flex;flex-direction:column">
           <h4>🏔️ 평창 슬라이딩 센터 트랙 개요</h4>
           <div class="dash-track-wrap" id="dash-track-container"></div>
-          <div class="dash-speed-legend">
-            <span>Speed (km/h)</span>
-            <span>60</span>
-            <div class="dash-legend-bar"></div>
-            <span>130</span>
-          </div>
         </div>
       </main>
 
@@ -3714,66 +3708,61 @@ class TableRenderer {
 
   // ─── 컨트롤 버튼 ──────────────────────────────────────────
   _renderControls(container, svg) {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--c-border);';
+    // h4 헤더를 찾아서 flex 행으로 변환, 범례+버튼을 h4 행에 합침
+    const card = container.closest('.dash-card') || container.parentNode;
+    const h4 = card.querySelector('h4');
 
-    // 범례 (좌측)
-    const legend = document.createElement('div');
-    legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px 16px;font-size:0.82rem;color:#555;';
-    this._segments.forEach(seg => {
-      const item = document.createElement('span');
-      item.style.cssText = 'display:inline-flex;align-items:center;gap:5px;';
-      item.innerHTML = `<span style="display:inline-block;width:16px;height:7px;border-radius:2px;background:${seg.color}"></span>${seg.label}`;
-      legend.appendChild(item);
-    });
-    wrap.appendChild(legend);
+    if (h4) {
+      h4.style.cssText += 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
 
-    // 버튼 (우측)
-    const btns = document.createElement('div');
-    btns.style.cssText = 'display:flex;gap:6px;flex-shrink:0;margin-left:24px;';
+      // 범례
+      const legend = document.createElement('span');
+      legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px 10px;font-size:0.65rem;color:#7a9ab5;margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0;';
+      this._segments.forEach(seg => {
+        const item = document.createElement('span');
+        item.style.cssText = 'display:inline-flex;align-items:center;gap:3px;white-space:nowrap;';
+        item.innerHTML = `<span style="display:inline-block;width:12px;height:5px;border-radius:2px;background:${seg.color}"></span>${seg.label}`;
+        legend.appendChild(item);
+      });
+      h4.appendChild(legend);
 
-    // 줌 리셋
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'track-ctrl-btn';
-    resetBtn.innerHTML = '🔄 리셋';
-    resetBtn.title = '줌/팬 초기화';
-    resetBtn.onclick = () => svg.transition().duration(400).call(this._zoom.transform, d3.zoomIdentity);
-    btns.appendChild(resetBtn);
+      // 버튼
+      const btns = document.createElement('span');
+      btns.style.cssText = 'display:flex;gap:4px;flex-shrink:0;';
 
-    // 줌 인
-    const zoomInBtn = document.createElement('button');
-    zoomInBtn.className = 'track-ctrl-btn';
-    zoomInBtn.innerHTML = '➕';
-    zoomInBtn.title = '확대';
-    zoomInBtn.onclick = () => svg.transition().duration(300).call(this._zoom.scaleBy, 1.5);
-    btns.appendChild(zoomInBtn);
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'track-ctrl-btn';
+      resetBtn.innerHTML = '🔄';
+      resetBtn.title = '줌/팬 초기화';
+      resetBtn.onclick = () => svg.transition().duration(400).call(this._zoom.transform, d3.zoomIdentity);
+      btns.appendChild(resetBtn);
 
-    // 줌 아웃
-    const zoomOutBtn = document.createElement('button');
-    zoomOutBtn.className = 'track-ctrl-btn';
-    zoomOutBtn.innerHTML = '➖';
-    zoomOutBtn.title = '축소';
-    zoomOutBtn.onclick = () => svg.transition().duration(300).call(this._zoom.scaleBy, 0.67);
-    btns.appendChild(zoomOutBtn);
+      const zoomInBtn = document.createElement('button');
+      zoomInBtn.className = 'track-ctrl-btn';
+      zoomInBtn.innerHTML = '➕';
+      zoomInBtn.title = '확대';
+      zoomInBtn.onclick = () => svg.transition().duration(300).call(this._zoom.scaleBy, 1.5);
+      btns.appendChild(zoomInBtn);
 
-    // 슬레드 애니메이션
-    const animBtn = document.createElement('button');
-    animBtn.className = 'track-ctrl-btn track-anim-btn';
-    animBtn.innerHTML = '🛷 주행';
-    animBtn.title = '슬레드 주행 애니메이션';
-    animBtn.onclick = () => this._runSledAnimation();
-    this._animBtn = animBtn;
-    btns.appendChild(animBtn);
+      const zoomOutBtn = document.createElement('button');
+      zoomOutBtn.className = 'track-ctrl-btn';
+      zoomOutBtn.innerHTML = '➖';
+      zoomOutBtn.title = '축소';
+      zoomOutBtn.onclick = () => svg.transition().duration(300).call(this._zoom.scaleBy, 0.67);
+      btns.appendChild(zoomOutBtn);
 
-    wrap.appendChild(btns);
-    // panel(.panel) 안에 추가
-    const panel = container.previousElementSibling;
-    if (panel && panel.classList.contains('panel')) {
-      panel.appendChild(wrap);
-    } else {
-      container.parentNode.insertBefore(wrap, container);
+      const animBtn = document.createElement('button');
+      animBtn.className = 'track-ctrl-btn track-anim-btn';
+      animBtn.innerHTML = '🛷';
+      animBtn.title = '슬레드 주행 애니메이션';
+      animBtn.onclick = () => this._runSledAnimation();
+      this._animBtn = animBtn;
+      btns.appendChild(animBtn);
+
+      h4.appendChild(btns);
     }
-    this._ctrlWrap = wrap;
+
+    this._ctrlWrap = h4;
   }
 
   // ─── 슬레드 주행 애니메이션 ────────────────────────────────
