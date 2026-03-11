@@ -396,6 +396,8 @@ class UIController {
       { el: document.getElementById('pred-segment-inputs'), model: 'segment' },
       { el: document.getElementById('pred-ensemble-inputs'), model: 'ensemble' },
       { el: document.getElementById('pred-general-inputs'), model: 'general' },
+      { el: document.getElementById('pred-xgb-pre-inputs'), model: 'xgb_pre' },
+      { el: document.getElementById('pred-xgb-live-inputs'), model: 'xgb_live' },
     ];
 
     for (const { el, model } of panels) {
@@ -475,6 +477,12 @@ class UIController {
         break;
       case 'general':
         this.#runGeneralMLR(okRecords, resultEl);
+        break;
+      case 'xgb_pre':
+        this.#runXGBoostPre(okRecords, resultEl);
+        break;
+      case 'xgb_live':
+        this.#runXGBoostLive(okRecords, resultEl);
         break;
       default:
         this.#runSimplePrediction(okRecords, stats, resultEl);
@@ -677,6 +685,207 @@ class UIController {
     `;
     UIController.animateCountUp(resultEl);
     this.charts.renderMultiPredChart('pred-chart', okRecords, this.predModel, pred);
+  }
+
+  // ─── XGBoost 출발 전 예측 ───
+  #runXGBoostPre(okRecords, resultEl) {
+    if (typeof XGB_MODELS === 'undefined' || !XGB_MODELS.pre) {
+      resultEl.innerHTML = UIController.errorHTML('모델 없음', 'XGBoost 모델 파일이 로드되지 않았습니다.');
+      return;
+    }
+    const startTime = parseFloat(this.#el('pred-xp-start')?.value);
+    if (!startTime || startTime < 3 || startTime > 8) {
+      resultEl.innerHTML = UIController.errorHTML('입력 오류', '스타트 시간을 입력해주세요 (3~8초).');
+      return;
+    }
+    const gender = this.#el('pred-gender-filter')?.value || '';
+    const iceTemp = parseFloat(this.#el('pred-xp-icetemp')?.value) || -7;
+    const airTemp = parseFloat(this.#el('pred-xp-airtemp')?.value) || 5;
+    const humidity = parseFloat(this.#el('pred-xp-humidity')?.value) || 60;
+    const pressure = parseFloat(this.#el('pred-xp-pressure')?.value) || 935;
+
+    const dewPoint = PredictionModel.calcDewPoint(airTemp, humidity);
+    const airDensity = PredictionModel.calcAirDensity(airTemp, humidity, pressure);
+    const windSpeed = 2.0; // 기본값
+    const isFemale = gender === 'F' ? 1 : 0;
+
+    // features: [start_time, temp_avg, air_temp, humidity, pressure, dewpoint, wind_speed, is_female]
+    const features = [startTime, iceTemp, airTemp, humidity, pressure, dewPoint, windSpeed, isFemale];
+    const predicted = xgbPredict(XGB_MODELS.pre, features);
+    const m = XGB_MODELS.pre;
+
+    // Feature importance 차트 데이터
+    const impEntries = Object.entries(m.imp).sort((a, b) => b[1] - a[1]);
+
+    resultEl.innerHTML = `
+      <div class="stat-card accent" style="text-align:center;padding:1.5rem">
+        <div style="font-size:0.85em;color:#aaa;margin-bottom:0.3rem">XGBoost 출발 전 예측</div>
+        <div style="font-size:2.8em;font-weight:800;color:#00e5ff;line-height:1.1" data-countup="${predicted.toFixed(3)}">${predicted.toFixed(3)}<span style="font-size:0.4em">초</span></div>
+        <div style="font-size:0.8em;color:#aaa;margin-top:0.5rem">스타트 ${startTime}초 | ${gender === 'F' ? '여자' : '남자'}</div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.5rem;margin-top:0.5rem">
+        <div class="stat-card"><div class="stat-label">학습 데이터</div><div class="stat-value">${m.n}건</div></div>
+        <div class="stat-card"><div class="stat-label">Train R²</div><div class="stat-value">${m.r2}</div></div>
+        <div class="stat-card"><div class="stat-label">5-Fold CV R²</div><div class="stat-value">${m.cv} ± ${(m.cvStd||0.053).toFixed(3)}</div></div>
+        <div class="stat-card"><div class="stat-label">RMSE</div><div class="stat-value">${m.rmse}초</div></div>
+        <div class="stat-card"><div class="stat-label">MAE</div><div class="stat-value">${m.mae}초</div></div>
+        <div class="stat-card"><div class="stat-label">Trees</div><div class="stat-value">${m.t.length}개</div></div>
+      </div>
+      <details style="margin-top:0.8rem" open>
+        <summary style="cursor:pointer;font-weight:600">🌡️ 환경 변수</summary>
+        <table class="mini-table" style="margin-top:0.5rem;width:100%">
+          <tr><td>얼음 온도</td><td><strong>${iceTemp}°C</strong></td></tr>
+          <tr><td>기온</td><td><strong>${airTemp}°C</strong></td></tr>
+          <tr><td>습도</td><td><strong>${humidity}%</strong></td></tr>
+          <tr><td>기압</td><td><strong>${pressure} hPa</strong></td></tr>
+          <tr><td>이슬점 (계산)</td><td><strong>${dewPoint.toFixed(1)}°C</strong></td></tr>
+          <tr><td>공기밀도 (계산)</td><td><strong>${airDensity.toFixed(4)} kg/m³</strong></td></tr>
+        </table>
+      </details>
+      <details style="margin-top:0.8rem" open>
+        <summary style="cursor:pointer;font-weight:600">📊 Feature Importance</summary>
+        <div style="margin-top:0.5rem">
+          ${impEntries.map(([name, val]) => {
+            const label = {start_time:'스타트',temp_avg:'얼음온도','기상청_기온평균_C':'기온','기상청_습도평균_pct':'습도','기상청_현지기압_hPa':'기압','기상청_이슬점평균_C':'이슬점','기상청_풍속평균_ms':'풍속',is_female:'성별'}[name] || name;
+            const pct = (val * 100).toFixed(1);
+            return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
+              <span style="width:60px;font-size:0.85em;text-align:right">${label}</span>
+              <div style="flex:1;background:#1a2a3a;border-radius:3px;height:18px;overflow:hidden">
+                <div style="width:${pct}%;background:linear-gradient(90deg,#00e5ff,#2979ff);height:100%;border-radius:3px;transition:width 0.5s"></div>
+              </div>
+              <span style="width:45px;font-size:0.8em;color:#aaa">${pct}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </details>
+      <div style="margin-top:0.8rem;padding:0.8rem;background:#1a2a3a;border-radius:8px;border-left:3px solid #ff9800">
+        <div style="font-weight:600;color:#ff9800;margin-bottom:0.3rem">⚠️ 모델 특성</div>
+        <div style="font-size:0.85em;color:#ccc;line-height:1.5">
+          출발 전 예측은 <strong>구간 기록 없이</strong> 환경변수만으로 예측하므로 정밀도가 제한적입니다 (CV R² ≈ 0.60).<br>
+          주행이 시작되면 <strong>XGBoost 주행 중 예측</strong> 모델로 전환하면 CV R² ≈ 0.97의 고정밀 예측이 가능합니다.
+        </div>
+      </div>
+    `;
+    UIController.animateCountUp(resultEl);
+  }
+
+  // ─── XGBoost 주행 중 예측 ───
+  #runXGBoostLive(okRecords, resultEl) {
+    if (typeof XGB_MODELS === 'undefined' || !XGB_MODELS.live) {
+      resultEl.innerHTML = UIController.errorHTML('모델 없음', 'XGBoost 모델 파일이 로드되지 않았습니다.');
+      return;
+    }
+    const startTime = parseFloat(this.#el('pred-xl-start')?.value);
+    const int1 = parseFloat(this.#el('pred-xl-int1')?.value);
+    const int2 = parseFloat(this.#el('pred-xl-int2')?.value);
+    const int3 = parseFloat(this.#el('pred-xl-int3')?.value);
+    const int4 = parseFloat(this.#el('pred-xl-int4')?.value);
+
+    if (!startTime || startTime < 3 || startTime > 8) {
+      resultEl.innerHTML = UIController.errorHTML('입력 오류', '스타트 시간을 입력해주세요.');
+      return;
+    }
+    if (!int4) {
+      resultEl.innerHTML = UIController.errorHTML('입력 오류', '구간 기록(Int.1~Int.4)을 모두 입력해주세요. 누적 시간으로 입력합니다.');
+      return;
+    }
+
+    const gender = this.#el('pred-gender-filter')?.value || '';
+    const iceTemp = parseFloat(this.#el('pred-xl-icetemp')?.value) || -7;
+    const airTemp = parseFloat(this.#el('pred-xl-airtemp')?.value) || 5;
+    const humidity = parseFloat(this.#el('pred-xl-humidity')?.value) || 60;
+    const pressure = parseFloat(this.#el('pred-xl-pressure')?.value) || 935;
+
+    const dewPoint = PredictionModel.calcDewPoint(airTemp, humidity);
+    const airDensity = PredictionModel.calcAirDensity(airTemp, humidity, pressure);
+    const windSpeed = 2.0;
+    const isFemale = gender === 'F' ? 1 : 0;
+
+    // features: [start_time, int1, int2, int3, int4, temp_avg, air_temp, humidity, pressure, dewpoint, wind_speed, is_female]
+    const features = [startTime, int1, int2, int3, int4, iceTemp, airTemp, humidity, pressure, dewPoint, windSpeed, isFemale];
+    const predicted = xgbPredict(XGB_MODELS.live, features);
+    const m = XGB_MODELS.live;
+
+    // 구간 분석
+    const seg1 = int1 - startTime;
+    const seg2 = int2 - int1;
+    const seg3 = int3 - int2;
+    const seg4 = int4 - int3;
+    const segFinish = predicted - int4;
+    const sections = [
+      { name: 'Start→Int.1', time: seg1 },
+      { name: 'Int.1→Int.2', time: seg2 },
+      { name: 'Int.2→Int.3', time: seg3 },
+      { name: 'Int.3→Int.4', time: seg4 },
+      { name: 'Int.4→Finish', time: segFinish },
+    ];
+    const fastest = Math.min(...sections.map(s => s.time));
+    const slowest = Math.max(...sections.map(s => s.time));
+
+    // MLR 비교 예측 (있으면)
+    let mlrPred = null;
+    try {
+      const mlrResult = this.predModel.trainGeneralMLR(okRecords, {
+        startTime, iceTemp, airTemp, humidity, pressure,
+        height: parseFloat(this.#el('pred-height')?.value) || null,
+        weight: parseFloat(this.#el('pred-weight')?.value) || null,
+      });
+      if (mlrResult) mlrPred = mlrResult.prediction.predicted;
+    } catch (e) { /* ignore */ }
+
+    resultEl.innerHTML = `
+      <div class="stat-card accent" style="text-align:center;padding:1.5rem">
+        <div style="font-size:0.85em;color:#aaa;margin-bottom:0.3rem">XGBoost 주행 중 예측</div>
+        <div style="font-size:2.8em;font-weight:800;color:#00e5ff;line-height:1.1" data-countup="${predicted.toFixed(3)}">${predicted.toFixed(3)}<span style="font-size:0.4em">초</span></div>
+        <div style="font-size:0.8em;color:#aaa;margin-top:0.5rem">
+          스타트 ${startTime}초 → Int.4 ${int4}초 | ${gender === 'F' ? '여자' : '남자'}
+          ${mlrPred ? `<br>MLR 예측: ${mlrPred.toFixed(3)}초 (차이: ${Math.abs(predicted - mlrPred).toFixed(3)}초)` : ''}
+        </div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.5rem;margin-top:0.5rem">
+        <div class="stat-card"><div class="stat-label">학습 데이터</div><div class="stat-value">${m.n}건</div></div>
+        <div class="stat-card"><div class="stat-label">Train R²</div><div class="stat-value">${m.r2}</div></div>
+        <div class="stat-card"><div class="stat-label">5-Fold CV R²</div><div class="stat-value">${m.cv} ± ${(m.cvStd||0.010).toFixed(3)}</div></div>
+        <div class="stat-card"><div class="stat-label">RMSE</div><div class="stat-value">${m.rmse}초</div></div>
+        <div class="stat-card"><div class="stat-label">MAE</div><div class="stat-value">${m.mae}초</div></div>
+        <div class="stat-card"><div class="stat-label">Trees</div><div class="stat-value">${m.t.length}개</div></div>
+      </div>
+      <details style="margin-top:0.8rem" open>
+        <summary style="cursor:pointer;font-weight:600">🏁 구간 분석</summary>
+        <table class="mini-table" style="margin-top:0.5rem;width:100%">
+          <thead><tr><th>구간</th><th>소요 시간</th><th>비고</th></tr></thead>
+          <tbody>
+            ${sections.map(s => `<tr>
+              <td>${s.name}</td>
+              <td><strong>${s.time.toFixed(3)}초</strong></td>
+              <td>${s.time === fastest ? '🟢 최고' : s.time === slowest ? '🔴 개선 필요' : ''}</td>
+            </tr>`).join('')}
+            <tr style="border-top:2px solid #334;font-weight:600">
+              <td>TOTAL</td><td>${predicted.toFixed(3)}초</td><td></td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
+      <details style="margin-top:0.8rem">
+        <summary style="cursor:pointer;font-weight:600">🌡️ 환경 변수</summary>
+        <table class="mini-table" style="margin-top:0.5rem;width:100%">
+          <tr><td>얼음 온도</td><td><strong>${iceTemp}°C</strong></td></tr>
+          <tr><td>기온</td><td><strong>${airTemp}°C</strong></td></tr>
+          <tr><td>습도</td><td><strong>${humidity}%</strong></td></tr>
+          <tr><td>기압</td><td><strong>${pressure} hPa</strong></td></tr>
+          <tr><td>이슬점 (계산)</td><td><strong>${dewPoint.toFixed(1)}°C</strong></td></tr>
+          <tr><td>공기밀도 (계산)</td><td><strong>${airDensity.toFixed(4)} kg/m³</strong></td></tr>
+        </table>
+      </details>
+      <div style="margin-top:0.8rem;padding:0.8rem;background:#0d2818;border-radius:8px;border-left:3px solid #4caf50">
+        <div style="font-weight:600;color:#4caf50;margin-bottom:0.3rem">✅ 고정밀 예측</div>
+        <div style="font-size:0.85em;color:#ccc;line-height:1.5">
+          XGBoost 주행 중 모델은 구간 기록(Int.1~Int.4)을 활용하여 <strong>CV R² = ${m.cv}</strong>의 정밀도를 달성합니다.<br>
+          Int.4(15번 커브)가 전체 예측의 <strong>52.3%</strong>, Int.3(12번 커브)가 <strong>36.2%</strong>를 설명합니다.
+        </div>
+      </div>
+    `;
+    UIController.animateCountUp(resultEl);
   }
 
   #runGeneralMLR(okRecords, resultEl) {

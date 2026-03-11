@@ -57,6 +57,8 @@
         <option value="multi">다중 선형</option>
         <option value="segment">구간별 가중</option>
         <option value="general">범용 MLR (논문용)</option>
+        <option value="xgb_pre">XGBoost 출발 전 예측</option>
+        <option value="xgb_live">XGBoost 주행 중 예측</option>
       </select>
       <button id="pred-run-btn" class="primary-btn">예측 실행</button>
     </div>
@@ -88,6 +90,32 @@
         <label>기압 (hPa):<input id="pred-g-pressure" type="number" step="0.1" min="900" max="1100" placeholder="1013" style="width:80px"></label>
       </div>
       <p style="font-size:0.8em;color:#888;margin-top:0.3rem">※ 키·몸무게는 상단 입력란 사용 | 환경 변인 미입력 시 기본값 적용 | 공기밀도·이슬점은 자동 계산</p>
+    </div>
+
+    <div id="pred-xgb-pre-inputs" class="panel hidden">
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end">
+        <label>스타트 (초):<input id="pred-xp-start" type="number" step="0.001" min="3" max="8" placeholder="5.12" style="width:80px"></label>
+        <label>얼음 온도 (°C):<input id="pred-xp-icetemp" type="number" step="0.1" min="-15" max="0" placeholder="-7" value="-7" style="width:75px"></label>
+        <label>기온 (°C):<input id="pred-xp-airtemp" type="number" step="0.1" min="-20" max="40" placeholder="5" style="width:75px"></label>
+        <label>습도 (%):<input id="pred-xp-humidity" type="number" step="1" min="0" max="100" placeholder="60" style="width:65px"></label>
+        <label>기압 (hPa):<input id="pred-xp-pressure" type="number" step="0.1" min="900" max="1100" placeholder="935" style="width:80px"></label>
+      </div>
+      <p style="font-size:0.8em;color:#888;margin-top:0.3rem">※ XGBoost (출발 전): 스타트 시간 + 환경변수로 피니시 예측 | CV R² ≈ 0.60</p>
+    </div>
+
+    <div id="pred-xgb-live-inputs" class="panel hidden">
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end">
+        <label>스타트 (초):<input id="pred-xl-start" type="number" step="0.001" min="3" max="8" placeholder="5.12" style="width:80px"></label>
+        <label>Int.1 (초):<input id="pred-xl-int1" type="number" step="0.001" placeholder="14.5" style="width:80px"></label>
+        <label>Int.2 (초):<input id="pred-xl-int2" type="number" step="0.001" placeholder="23.7" style="width:80px"></label>
+        <label>Int.3 (초):<input id="pred-xl-int3" type="number" step="0.001" placeholder="34.5" style="width:80px"></label>
+        <label>Int.4 (초):<input id="pred-xl-int4" type="number" step="0.001" placeholder="45.8" style="width:80px"></label>
+        <label>얼음 온도 (°C):<input id="pred-xl-icetemp" type="number" step="0.1" min="-15" max="0" placeholder="-7" value="-7" style="width:75px"></label>
+        <label>기온 (°C):<input id="pred-xl-airtemp" type="number" step="0.1" min="-20" max="40" placeholder="5" style="width:75px"></label>
+        <label>습도 (%):<input id="pred-xl-humidity" type="number" step="1" min="0" max="100" placeholder="60" style="width:65px"></label>
+        <label>기압 (hPa):<input id="pred-xl-pressure" type="number" step="0.1" min="900" max="1100" placeholder="935" style="width:80px"></label>
+      </div>
+      <p style="font-size:0.8em;color:#888;margin-top:0.3rem">※ XGBoost (주행 중): 스타트 + 구간 기록 + 환경변수 → 고정밀 예측 | CV R² ≈ 0.97</p>
     </div>
 
     <div id="pred-segment-inputs" class="panel hidden">
@@ -231,6 +259,7 @@
 <script src="js/supabase-data.js"></script>
 <script src="js/DataStore.js"></script>
 <script src="js/PlayerAnalyzer.js"></script>
+<script src="js/xgb-models.js"></script>
 <script src="js/PredictionModel.js"></script>
 <script src="js/ChartManager.js"></script>
 <script src="js/TableRenderer.js"></script>
