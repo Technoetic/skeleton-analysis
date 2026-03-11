@@ -86,7 +86,53 @@ class DashboardController {
   }
 
   async #fetchWeather() {
-    // 평창 알펜시아 좌표: 37.6584°N, 128.7253°E
+    // 기상청 API허브 — 대관령(100) ASOS 시간 관측
+    const KMA_KEY = 'ncpn3dPgT5OKZ93T4D-TJw';
+    const now = new Date();
+    // KST 기준 최근 정시 (관측 데이터는 정시 기준)
+    const kst = new Date(now.getTime() + 9 * 3600000);
+    kst.setMinutes(0, 0, 0);
+    const tm = kst.toISOString().replace(/[-T:]/g, '').slice(0, 12); // YYYYMMDDHHmm
+    const url = `https://apihub.kma.go.kr/api/typ01/url/kma_sfctm2.php?tm=${tm}&stn=100&help=0&authKey=${KMA_KEY}`;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(resp.status);
+      const text = await resp.text();
+      // 데이터 행 파싱 (# 으로 시작하지 않는 행)
+      const dataLine = text.split('\n').find(l => l.trim() && !l.startsWith('#'));
+      if (!dataLine) throw new Error('No data line');
+      const cols = dataLine.trim().split(/\s+/);
+      // cols: [0]=YYMMDDHHMI [1]=STN [2]=WD [3]=WS ... [12]=TA [13]=TD [14]=HM ... [8]=PA
+      const ta = parseFloat(cols[12]);  // 기온
+      const hm = parseFloat(cols[14]);  // 습도
+      const pa = parseFloat(cols[8]);   // 현지기압
+      const td = parseFloat(cols[13]);  // 이슬점
+      const airEl = this.#el('dash-airtemp');
+      const humEl = this.#el('dash-humidity');
+      const presEl = this.#el('dash-pressure');
+      if (airEl && !isNaN(ta)) { airEl.value = ta; airEl.readOnly = true; }
+      if (humEl && !isNaN(hm)) { humEl.value = hm; humEl.readOnly = true; }
+      if (presEl && !isNaN(pa)) { presEl.value = pa; presEl.readOnly = true; }
+      // 관측 시각 표시
+      const obsTime = cols[0]; // YYYYMMDDHHmm
+      const h4 = this.#el('dash-airtemp')?.closest('.dash-card')?.querySelector('h4');
+      if (h4) {
+        const hh = obsTime.slice(8, 10), mm = obsTime.slice(10, 12);
+        h4.querySelector('.weather-time')?.remove();
+        const span = document.createElement('span');
+        span.className = 'weather-time';
+        span.style.cssText = 'font-size:0.65rem;color:#4caf50;margin-left:6px;font-weight:400;text-transform:none;letter-spacing:0;';
+        span.textContent = `${hh}:${mm} KST`;
+        h4.appendChild(span);
+      }
+      this.#updateCalc();
+    } catch (e) {
+      console.warn('KMA fetch failed, falling back to Open-Meteo:', e);
+      await this.#fetchWeatherFallback();
+    }
+  }
+
+  async #fetchWeatherFallback() {
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.6584&longitude=128.7253&current=temperature_2m,relative_humidity_2m,surface_pressure&timezone=Asia/Seoul';
     try {
       const resp = await fetch(url);
@@ -101,7 +147,7 @@ class DashboardController {
       if (presEl) { presEl.value = c.surface_pressure; presEl.readOnly = true; }
       this.#updateCalc();
     } catch (e) {
-      console.warn('Weather fetch failed:', e);
+      console.warn('Weather fallback also failed:', e);
     }
   }
 
