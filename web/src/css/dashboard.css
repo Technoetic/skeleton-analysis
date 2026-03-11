@@ -2,15 +2,16 @@
 .dash-layout {
   display: grid;
   grid-template-columns: 280px 1fr 300px;
-  gap: 0.8rem;
-  min-height: calc(100vh - 140px);
-  padding: 0.5rem;
+  gap: 0.6rem;
+  height: 100%;
+  padding: 0.4rem;
+  box-sizing: border-box;
 }
 @media (max-width: 1200px) {
   .dash-layout { grid-template-columns: 1fr; }
 }
 
-.dash-left, .dash-right { display: flex; flex-direction: column; gap: 0.6rem; overflow-y: auto; max-height: calc(100vh - 140px); }
+.dash-left, .dash-right { display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
 .dash-center { display: flex; flex-direction: column; min-height: 0; }
 
 .dash-card {
@@ -178,4 +179,5 @@
 }
 
 /* 대시보드 탭 활성 시 배경 */
-#tab-dashboard { background: #0a1628; }
+#tab-dashboard { background: #0a1628; padding: 0; }
+#tab-dashboard.active { display: flex; flex-direction: column; }

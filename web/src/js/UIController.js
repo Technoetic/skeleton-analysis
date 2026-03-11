@@ -193,13 +193,7 @@ class UIController {
     this.#renderExploreTab();
     this._trackMapRendered = false;
 
-    // 스크롤 시 헤더 그림자 강화
-    const header = document.querySelector('header');
-    if (header) {
-      window.addEventListener('scroll', () => {
-        header.classList.toggle('scrolled', window.scrollY > 10);
-      }, { passive: true });
-    }
+    // header removed — fullscreen layout
 
 
     // 키보드 단축키 시스템

@@ -103,7 +103,7 @@
 
 /* ===== 리셋 + 기본 ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; height: 100%; }
 
 /* ===== 건너뛰기 링크 (접근성) ===== */
 a.skip-link {
@@ -126,85 +126,40 @@ a.skip-link:focus {
 
 body {
   font-family: var(--font);
-  background: linear-gradient(180deg, var(--c-bg) 0%, #e8ecf2 50%, var(--c-bg-warm) 100%);
-  background-attachment: fixed;
+  background: var(--c-bg);
   color: var(--c-text);
   font-size: 14px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 ::selection { background: var(--c-accent); color: var(--c-primary-700); }
 
-/* ===== 헤더 ===== */
-header {
-  background: linear-gradient(135deg, #060f1a 0%, #0d2238 35%, var(--c-primary-400) 100%);
-  color: white;
-  padding: var(--sp-6) var(--sp-8);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 4px 30px rgba(0,0,0,0.2);
-}
-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 75% 0%, rgba(232,168,32,0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 20% 100%, rgba(59,109,148,0.15) 0%, transparent 50%);
-  pointer-events: none;
-}
-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(232,168,32,0.3), transparent);
-}
-@keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-header h1 {
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin-bottom: var(--sp-1);
-  letter-spacing: -0.3px;
-  position: relative;
-  animation: fadeDown 0.5s var(--ease-out);
-}
-.header-sub {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.6);
-  font-weight: 400;
-  letter-spacing: 1px;
-  margin-bottom: var(--sp-3);
-  position: relative;
-  text-transform: uppercase;
-}
-header.scrolled {
-  box-shadow: 0 4px 40px rgba(0,0,0,0.35);
-}
-
-/* ===== 탭 내비게이션 ===== */
-.tabs {
+/* ===== 탭 바 (헤더 대체) ===== */
+.topbar-tabs {
   display: flex;
-  gap: var(--sp-2);
-  flex-wrap: wrap;
-  position: relative;
-  animation: fadeDown 0.5s var(--ease-out) 0.15s both;
+  gap: var(--sp-1);
+  align-items: center;
+  background: linear-gradient(135deg, #060f1a 0%, #0d2238 60%, var(--c-primary-400) 100%);
+  padding: var(--sp-2) var(--sp-4);
+  flex-shrink: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
 .tab-btn {
-  padding: 0.5rem 1.25rem;
+  padding: 0.35rem 1rem;
   border: 1.5px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.04);
   color: rgba(255,255,255,0.65);
   border-radius: var(--r-full);
   cursor: pointer;
   font-family: var(--font);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   font-weight: 500;
   transition: all var(--t-normal);
   position: relative;
@@ -241,11 +196,17 @@ header.scrolled {
 }
 
 /* ===== 콘텐츠 영역 ===== */
+#main-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
 .tab-content {
   display: none;
-  padding: var(--sp-8) var(--sp-6);
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: var(--sp-4) var(--sp-4);
+  max-width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 .tab-content.active { display: block; }
 @keyframes fadeUp {
@@ -1176,26 +1137,7 @@ details > :not(summary) { padding: var(--sp-5); }
 }
 .model-card-inactive:hover { opacity: 1; }
 
-/* ===== Footer ===== */
-footer {
-  text-align: center;
-  padding: var(--sp-10) var(--sp-4) var(--sp-8);
-  color: var(--c-text-muted);
-  font-size: 0.78rem;
-  margin-top: var(--sp-12);
-  line-height: 1.9;
-  letter-spacing: 0.3px;
-  position: relative;
-}
-footer::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 60px; height: 3px;
-  background: linear-gradient(90deg, var(--c-accent), var(--c-accent-light));
-  border-radius: var(--r-full);
-}
+/* footer removed — fullscreen layout */
 
 /* ===== 안내 힌트 ===== */
 .info-hint {

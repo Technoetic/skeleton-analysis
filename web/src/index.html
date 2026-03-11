@@ -22,20 +22,14 @@
 <body>
 <a href="#main-content" class="skip-link">본문으로 건너뛰기</a>
 
-<header>
-  <h1>🛷 스켈레톤 경기기록 분석</h1>
-  <p class="header-sub">평창 알펜시아 슬라이딩 센터 · 2025-26 시즌</p>
-  <div class="tabs-wrapper">
-    <nav class="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="dashboard" role="tab" aria-selected="true">대시보드</button>
-      <button class="tab-btn" data-tab="prediction" role="tab" aria-selected="false">예측 모델</button>
-      <button class="tab-btn" data-tab="analysis" role="tab" aria-selected="false">선수 분석</button>
-      <button class="tab-btn" data-tab="compare" role="tab" aria-selected="false">선수 비교</button>
-      <button class="tab-btn" data-tab="explore" role="tab" aria-selected="false">데이터 탐색</button>
-      <button class="tab-btn" data-tab="trackmap" role="tab" aria-selected="false">트랙 맵</button>
-    </nav>
-  </div>
-</header>
+<nav class="topbar-tabs" role="tablist">
+  <button class="tab-btn active" data-tab="dashboard" role="tab" aria-selected="true">대시보드</button>
+  <button class="tab-btn" data-tab="prediction" role="tab" aria-selected="false">예측 모델</button>
+  <button class="tab-btn" data-tab="analysis" role="tab" aria-selected="false">선수 분석</button>
+  <button class="tab-btn" data-tab="compare" role="tab" aria-selected="false">선수 비교</button>
+  <button class="tab-btn" data-tab="explore" role="tab" aria-selected="false">데이터 탐색</button>
+  <button class="tab-btn" data-tab="trackmap" role="tab" aria-selected="false">트랙 맵</button>
+</nav>
 
 <main id="main-content">
 
@@ -128,7 +122,6 @@
         </div>
       </aside>
     </div>
-    <div class="dash-footer">알고리즘: XGBoost, MLR | 평창 알펜시아 슬라이딩 센터 | 2025-26 시즌</div>
   </section>
 
   <!-- ── Tab 1: 예측 모델 ── -->
@@ -328,10 +321,6 @@
 
 </main>
 
-<footer>
-  평창 알펜시아 슬라이딩 센터 · 2025-26 시즌 스켈레톤 경기기록 데이터<br>
-  데이터 출처: IBSF / 대한봅슬레이스켈레톤경기연맹
-</footer>
 
 <!-- 모달 오버레이 -->
 <div id="explore-overlay" class="modal-overlay hidden"></div>
