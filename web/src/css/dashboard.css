@@ -3,9 +3,11 @@
   display: grid;
   grid-template-columns: 280px 1fr 300px;
   gap: 0.6rem;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   padding: 0.4rem;
   box-sizing: border-box;
+  overflow: hidden;
 }
 @media (max-width: 1200px) {
   .dash-layout { grid-template-columns: 1fr; }
@@ -104,7 +106,7 @@
 /* 중앙 트랙 */
 .dash-track-wrap {
   flex: 1;
-  min-height: 400px;
+  min-height: 0;
   position: relative;
   border-radius: 8px;
   overflow: hidden;
@@ -180,4 +182,4 @@
 
 /* 대시보드 탭 활성 시 배경 */
 #tab-dashboard { background: #0a1628; padding: 0; }
-#tab-dashboard.active { display: flex; flex-direction: column; }
+#tab-dashboard.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
