@@ -1,0 +1,181 @@
+/* ── Dashboard Tab ── */
+.dash-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 0.8rem;
+  min-height: calc(100vh - 140px);
+  padding: 0.5rem;
+}
+@media (max-width: 1200px) {
+  .dash-layout { grid-template-columns: 1fr; }
+}
+
+.dash-left, .dash-right { display: flex; flex-direction: column; gap: 0.6rem; overflow-y: auto; max-height: calc(100vh - 140px); }
+.dash-center { display: flex; flex-direction: column; min-height: 0; }
+
+.dash-card {
+  background: rgba(15, 25, 40, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 0.9rem;
+  color: #d0d8e0;
+}
+.dash-card h4 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6ba3d6;
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* 입력 필드 */
+.dash-input-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.4rem; }
+.dash-input-row label { font-size: 0.78rem; color: #8aa; display: flex; flex-direction: column; gap: 0.15rem; }
+.dash-input-row input, .dash-input-row select {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  color: #e0e8f0;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  width: 100%;
+}
+.dash-input-row input:focus, .dash-input-row select:focus {
+  outline: none;
+  border-color: #00e5ff;
+  box-shadow: 0 0 6px rgba(0,229,255,0.2);
+}
+.dash-select-full { width: 100%; }
+
+/* 환경 데이터 인라인 */
+.dash-env-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #b0c4d8;
+  margin: 0.3rem 0;
+}
+.dash-env-row .env-icon { font-size: 1.1rem; }
+.dash-env-val { font-weight: 600; color: #e0f0ff; }
+
+/* 계산값 */
+.dash-calc-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #7a9ab5;
+  padding: 0.25rem 0;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.dash-calc-row .val { color: #a0d8ff; font-weight: 600; }
+
+/* 필터 상태 뱃지 */
+.dash-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.dash-badge.active { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
+.dash-badge.inactive { background: rgba(158,158,158,0.2); color: #9e9e9e; border: 1px solid rgba(158,158,158,0.3); }
+
+/* 예측 버튼 */
+.dash-predict-btn {
+  width: 100%;
+  padding: 0.6rem;
+  background: linear-gradient(135deg, #00b8d4, #0091ea);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+.dash-predict-btn:hover { background: linear-gradient(135deg, #00e5ff, #2979ff); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,229,255,0.3); }
+
+/* 중앙 트랙 */
+.dash-track-wrap {
+  flex: 1;
+  min-height: 400px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dash-speed-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  color: #8aa;
+}
+.dash-legend-bar {
+  height: 10px;
+  flex: 1;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #1565c0, #00bcd4, #4caf50, #ffeb3b, #ff9800, #f44336);
+}
+
+/* 우측: 예측 결과 */
+.dash-big-number {
+  text-align: center;
+  padding: 1.2rem 0 0.8rem;
+}
+.dash-big-number .number {
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: #00e5ff;
+  text-shadow: 0 0 30px rgba(0,229,255,0.4), 0 0 60px rgba(0,229,255,0.15);
+  line-height: 1;
+}
+.dash-big-number .unit { font-size: 1rem; color: #6ba3d6; margin-left: 0.2rem; }
+.dash-big-number .sub { font-size: 0.78rem; color: #7a9ab5; margin-top: 0.3rem; }
+
+.dash-model-badge {
+  text-align: center;
+  margin: 0.3rem 0 0.6rem;
+  font-size: 0.78rem;
+  color: #8aa;
+}
+.dash-model-badge strong { color: #4fc3f7; }
+.dash-accuracy { color: #4caf50; font-weight: 600; }
+
+/* 분포 차트 */
+.dash-dist-wrap { height: 120px; margin: 0.5rem 0; }
+
+/* 코칭 팁 */
+.dash-coaching { margin-top: 0.5rem; }
+.dash-tip {
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.4rem;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  border-left: 3px solid #ff9800;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #c8d8e8;
+}
+.dash-tip.good { border-left-color: #4caf50; }
+.dash-tip.warn { border-left-color: #ff9800; }
+.dash-tip.danger { border-left-color: #f44336; }
+.dash-tip .tip-title { font-weight: 600; color: #e0e8f0; margin-bottom: 0.15rem; }
+
+/* 대시보드 푸터 */
+.dash-footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #556;
+  padding: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  margin-top: 0.5rem;
+}
+
+/* 대시보드 탭 활성 시 배경 */
+#tab-dashboard { background: #0a1628; }

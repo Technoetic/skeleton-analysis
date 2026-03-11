@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/tippy.css">
   <link rel="stylesheet" href="css/tabulator.min.css">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
   <script src="js/chart.min.js"></script>
   <script src="js/chartjs-plugin-datalabels.min.js"></script>
   <script src="js/chartjs-plugin-annotation.min.js"></script>
@@ -26,7 +27,8 @@
   <p class="header-sub">평창 알펜시아 슬라이딩 센터 · 2025-26 시즌</p>
   <div class="tabs-wrapper">
     <nav class="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="prediction" role="tab" aria-selected="true">예측 모델</button>
+      <button class="tab-btn active" data-tab="dashboard" role="tab" aria-selected="true">대시보드</button>
+      <button class="tab-btn" data-tab="prediction" role="tab" aria-selected="false">예측 모델</button>
       <button class="tab-btn" data-tab="analysis" role="tab" aria-selected="false">선수 분석</button>
       <button class="tab-btn" data-tab="compare" role="tab" aria-selected="false">선수 비교</button>
       <button class="tab-btn" data-tab="explore" role="tab" aria-selected="false">데이터 탐색</button>
@@ -37,8 +39,100 @@
 
 <main id="main-content">
 
+  <!-- ── Tab 0: 대시보드 ── -->
+  <section id="tab-dashboard" class="tab-content active" role="tabpanel">
+    <div class="dash-layout">
+      <!-- 좌측: 입력 데이터 -->
+      <aside class="dash-left">
+        <div class="dash-card">
+          <h4>🏋️ 선수 프로필 및 목표</h4>
+          <div class="dash-input-row">
+            <label style="flex:1">성별
+              <select id="dash-gender" class="dash-select-full"></select>
+            </label>
+          </div>
+          <div class="dash-input-row">
+            <label style="flex:1">선수
+              <select id="dash-player" class="dash-select-full"><option value="">선수 선택</option></select>
+            </label>
+          </div>
+          <div id="dash-profile-info"></div>
+          <div class="dash-input-row">
+            <label style="flex:1">목표 스타트 (초)
+              <input id="dash-target-start" type="number" step="0.001" min="3" max="8" placeholder="4.85">
+            </label>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <h4>🌡️ 실시간 환경 데이터 <span style="font-size:0.7rem;color:#556">(Pyeongchang)</span></h4>
+          <div class="dash-input-row">
+            <label style="flex:1">기온 (°C)<input id="dash-airtemp" type="number" step="0.1" placeholder="-7.2"></label>
+            <label style="flex:1">습도 (%)<input id="dash-humidity" type="number" step="1" placeholder="65"></label>
+            <label style="flex:1">기압 (hPa)<input id="dash-pressure" type="number" step="0.1" placeholder="935"></label>
+          </div>
+          <div id="dash-calc-values">
+            <div class="dash-calc-row"><span>입력 대기 중...</span></div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <h4>❄️ 현장 얼음 온도</h4>
+          <div class="dash-input-row">
+            <label style="flex:1">수동 입력 (°C)<input id="dash-icetemp" type="number" step="0.1" min="-15" max="0" value="-7" placeholder="-5.1"></label>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <h4>🔍 이상치 데이터 필터링</h4>
+          <div id="dash-filter-status"><span class="dash-badge active">활성</span></div>
+        </div>
+
+        <button id="dash-predict-btn" class="dash-predict-btn">예측 실행</button>
+      </aside>
+
+      <!-- 중앙: 트랙 시각화 -->
+      <main class="dash-center">
+        <div class="dash-card" style="flex:1;display:flex;flex-direction:column">
+          <h4>🏔️ 평창 슬라이딩 센터 트랙 개요</h4>
+          <div class="dash-track-wrap" id="dash-track-container"></div>
+          <div class="dash-speed-legend">
+            <span>Speed (km/h)</span>
+            <span>60</span>
+            <div class="dash-legend-bar"></div>
+            <span>130</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- 우측: AI 예측 + 코칭 -->
+      <aside class="dash-right">
+        <div class="dash-card">
+          <h4>🤖 AI 예측 결과 및 코칭 전략</h4>
+          <div id="dash-prediction-result">
+            <div class="dash-big-number">
+              <div class="sub">최종 예상 기록</div>
+              <div class="number" style="color:#334">--.-<span class="unit">s</span></div>
+            </div>
+            <div class="dash-model-badge">성별과 목표 스타트를 입력하고 예측을 실행하세요</div>
+          </div>
+          <div class="dash-dist-wrap">
+            <canvas id="dash-dist-chart" style="display:none"></canvas>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h4>💡 데이터 기반 코칭 Tip</h4>
+          <div id="dash-coaching-tips">
+            <div class="dash-tip good"><div class="tip-title">🟢 대기 중</div>예측을 실행하면 환경 기반 코칭 인사이트가 표시됩니다.</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="dash-footer">알고리즘: XGBoost, MLR | 평창 알펜시아 슬라이딩 센터 | 2025-26 시즌</div>
+  </section>
+
   <!-- ── Tab 1: 예측 모델 ── -->
-  <section id="tab-prediction" class="tab-content active" role="tabpanel">
+  <section id="tab-prediction" class="tab-content" role="tabpanel">
     <h2 class="sr-only">예측 모델</h2>
     <div class="panel">
       <select id="pred-gender-filter" aria-label="성별 선택" class="filter-select-sm">
@@ -265,6 +359,7 @@
 <script src="js/TableRenderer.js"></script>
 <script src="js/trackmap-data.js"></script>
 <script src="js/TrackMapRenderer.js"></script>
+<script src="js/DashboardController.js"></script>
 <script src="js/UIController.js"></script>
 
 </body>

@@ -28,7 +28,8 @@ class DataStore {
   _genderMatches(recordGender, filterGender) {
     if (!filterGender) return true;
     if (recordGender === filterGender) return true;
-    if (recordGender === 'MF' && (filterGender === 'M' || filterGender === 'F')) return true;
+    if (recordGender === 'MF' && (filterGender === 'M' || filterGender === 'W')) return true;
+    if (recordGender === 'Mixed' && (filterGender === 'M' || filterGender === 'W')) return true;
     return false;
   }
 

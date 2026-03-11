@@ -892,6 +892,8 @@ class PredictionModel {
 
   // ─── 전체 학습 (4가지 모델 + CV) ──────────────────────────
   trainAll(records) {
+    // 캐싱: 동일 레코드셋이면 재학습 생략
+    if (this._trainAllCache && this._trainAllCache.length === records.length) return this._trainAllCache.result;
     const simple = this.train(records);
     const multi = this.trainMulti(records);
     const segment = this.trainSegment(records);
@@ -900,7 +902,9 @@ class PredictionModel {
     if (records.filter(r => r.status === 'OK').length >= 10) {
       this.crossValidate(records);
     }
-    return { simple, multi, segment, poly };
+    const result = { simple, multi, segment, poly };
+    this._trainAllCache = { length: records.length, result };
+    return result;
   }
 
   // ─── 모델 비교 리포트 ──────────────────────────────────────

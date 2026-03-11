@@ -9,7 +9,7 @@ class UIController {
     ANIMATION: 500,
   };
   static MAX_COMPARE = 7;
-  static TAB_KEYS = { '1': 'prediction', '2': 'analysis', '3': 'compare', '4': 'explore', '5': 'trackmap' };
+  static TAB_KEYS = { '1': 'dashboard', '2': 'prediction', '3': 'analysis', '4': 'compare', '5': 'explore', '6': 'trackmap' };
 
   constructor() {
     this.ds = new DataStore(RAW_DATA);
@@ -314,11 +314,15 @@ class UIController {
         // 현재 탭 스크롤 위치 저장
         const currentTab = document.querySelector('.tab-btn.active');
         if (currentTab) this._tabScrollPos[currentTab.dataset.tab] = window.scrollY;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
         document.querySelectorAll('.tab-content').forEach(s => {
           s.classList.remove('active');
         });
         btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
         // 비활성 탭 차트 메모리 정리
         this.#destroyInactiveCharts(tab);
         const section = document.getElementById(`tab-${tab}`);
@@ -2173,4 +2177,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   await _supabaseReady;
   const ui = new UIController();
   ui.init();
+  const dash = new DashboardController(ui.ds, ui.predModel, ui.charts, ui.trackMap);
+  dash.init();
 });

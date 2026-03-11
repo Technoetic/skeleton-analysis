@@ -8,11 +8,19 @@ DIST = Path("web/dist/index.html")
 html = (SRC / "index.html").read_text(encoding="utf-8")
 
 # 1. Replace <link rel="stylesheet" href="css/X"> with <style>contents</style>
+def minify_css(css):
+    css = re.sub(r'/\*.*?\*/', '', css, flags=re.DOTALL)
+    css = re.sub(r'\s+', ' ', css)
+    css = re.sub(r'\s*([{:;,}])\s*', r'\1', css)
+    return css.strip()
+
 def inline_css(m):
     href = m.group(1)
     css_path = SRC / href
     if css_path.exists():
         css = css_path.read_text(encoding="utf-8")
+        if not css_path.name.endswith('.min.css'):
+            css = minify_css(css)
         return f"<style>{css}</style>"
     return m.group(0)
 
