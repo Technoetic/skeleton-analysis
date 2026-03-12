@@ -52,6 +52,7 @@
   box-shadow: 0 0 6px rgba(0,229,255,0.2);
 }
 .dash-select-full { width: 100%; }
+.dash-input-row select option { background: #1a2a3a; color: #e0e8f0; }
 
 /* 환경 데이터 인라인 */
 .dash-env-row {
