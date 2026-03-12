@@ -4533,7 +4533,10 @@ class TableRenderer {
     // KST 기준 현재 분 (1분 단위 관측, 2분 여유)
     const kst = new Date(now.getTime() + 9 * 3600000 - 2 * 60000);
     const tm2 = kst.toISOString().replace(/[-T:]/g, '').slice(0, 12);
-    const url = `https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min?tm2=${tm2}&stn=100&disp=0&help=0&authKey=${KMA_KEY}`;
+    // Use nginx proxy in production to avoid CORS, direct URL for local dev
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    const base = isLocal ? 'https://apihub.kma.go.kr/api' : '/api/kma';
+    const url = `${base}/typ01/cgi-bin/url/nph-aws2_min?tm2=${tm2}&stn=100&disp=0&help=0&authKey=${KMA_KEY}`;
     try {
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(resp.status);
