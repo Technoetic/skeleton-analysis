@@ -28,39 +28,18 @@ class DashboardController {
     const btn = this.#el('dash-predict-btn');
     if (btn) btn.addEventListener('click', () => this.#runPrediction());
 
-    const gender = this.#el('dash-gender');
-    if (gender) gender.addEventListener('change', () => this.#onGenderChange());
-
     const player = this.#el('dash-player');
     if (player) player.addEventListener('change', () => this.#onPlayerChange());
-
-    // 환경 데이터는 자동 fetch (readOnly) — 수동 리스너 불필요
   }
 
   #populateSelectors() {
-    const genderEl = this.#el('dash-gender');
-    if (!genderEl) return;
-    const allRecords = this.ds.getAllRecords ? this.ds.getAllRecords() : this.ds.records || [];
-    const genders = [...new Set(allRecords.filter(r => r.gender && r.gender !== 'Mixed').map(r => r.gender))].sort();
-    genderEl.innerHTML = '<option value="">성별 선택</option>' + genders.map(g => {
-      const label = g === 'M' ? '남자' : g === 'W' ? '여자' : g;
-      return `<option value="${g}">${label}</option>`;
-    }).join('');
-  }
-
-  #onGenderChange() {
-    const gender = this.#el('dash-gender')?.value;
     const playerEl = this.#el('dash-player');
-    if (!playerEl || !gender) { if (playerEl) playerEl.innerHTML = '<option value="">선수 선택</option>'; return; }
-
-    const allRecords = this.ds.getAllRecords ? this.ds.getAllRecords() : this.ds.records || [];
+    if (!playerEl) return;
     const athletes = typeof ATHLETES !== 'undefined' ? ATHLETES : [];
-    const names = [...new Set(allRecords.filter(r => r.gender === gender && r.name).map(r => r.name))].sort();
-    playerEl.innerHTML = '<option value="">선수 선택</option>' + names.map(name => {
-      const ath = athletes.find(a => a.name === name);
-      const label = ath ? ath.athlete_id : name;
-      return `<option value="${name}">${label}</option>`;
-    }).join('');
+    const sorted = [...athletes].sort((a, b) => a.athlete_id.localeCompare(b.athlete_id));
+    playerEl.innerHTML = '<option value="">선수 선택</option>' + sorted.map(a =>
+      `<option value="${a.name}">${a.athlete_id}</option>`
+    ).join('');
   }
 
   #onPlayerChange() {
@@ -214,9 +193,11 @@ class DashboardController {
   }
 
   #getInputs() {
+    const playerName = this.#el('dash-player')?.value || '';
+    const ath = (typeof ATHLETES !== 'undefined' ? ATHLETES : []).find(a => a.name === playerName);
     return {
-      gender: this.#el('dash-gender')?.value || '',
-      player: this.#el('dash-player')?.value || '',
+      gender: ath ? ath.gender : '',
+      player: playerName,
       startTime: parseFloat(this.#el('dash-target-start')?.value) || 0,
       airTemp: parseFloat(this.#el('dash-airtemp')?.value) || 5,
       humidity: parseFloat(this.#el('dash-humidity')?.value) || 60,
@@ -234,8 +215,8 @@ class DashboardController {
     const coachEl = this.#el('dash-coaching-tips');
     if (!resultEl) return;
 
-    if (!inp.gender) {
-      resultEl.innerHTML = '<div style="text-align:center;color:#f44336;padding:1rem">성별을 선택해주세요</div>';
+    if (!inp.player) {
+      resultEl.innerHTML = '<div style="text-align:center;color:#f44336;padding:1rem">선수를 선택해주세요</div>';
       return;
     }
     if (!inp.startTime || inp.startTime < 3 || inp.startTime > 8) {
