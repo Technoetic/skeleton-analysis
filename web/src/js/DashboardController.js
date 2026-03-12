@@ -41,7 +41,7 @@ class DashboardController {
     const genderEl = this.#el('dash-gender');
     if (!genderEl) return;
     const allRecords = this.ds.getAllRecords ? this.ds.getAllRecords() : this.ds.records || [];
-    const genders = [...new Set(allRecords.filter(r => r.gender).map(r => r.gender))].sort();
+    const genders = [...new Set(allRecords.filter(r => r.gender && r.gender !== 'Mixed').map(r => r.gender))].sort();
     genderEl.innerHTML = '<option value="">성별 선택</option>' + genders.map(g => {
       const label = g === 'M' ? '남자' : g === 'W' ? '여자' : g;
       return `<option value="${g}">${label}</option>`;
