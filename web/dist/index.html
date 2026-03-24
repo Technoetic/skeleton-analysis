@@ -5046,11 +5046,11 @@ class TableRenderer {
       const color = isBest ? '#4caf50' : '#888';
       const border = isBest ? '2px solid #4caf50' : '1px solid rgba(255,255,255,0.1)';
       const label = isBest ? ' ⭐' : '';
-      const info = m.r2 != null ? `R² ${(m.r2 * 100).toFixed(1)}%` : `XGB 80% + ${mlrLabel} 20%`;
+      const info = m.r2 != null ? `R² ${(m.r2 * 100).toFixed(1)}%` : `XGB80+MLR20`;
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:6px;border:${border};margin-bottom:4px;background:rgba(255,255,255,0.03)">
         <span style="font-weight:600;color:${color};min-width:80px">${m.name}${label}</span>
         <span style="font-size:1.1rem;font-weight:700;color:${isBest ? '#fff' : '#aaa'}">${m.pred.toFixed(2)}s</span>
-        <span style="font-size:0.7rem;color:#888">${info}</span>
+        <span style="font-size:0.65rem;color:#888;white-space:nowrap">${info}</span>
       </div>`;
     };
 
