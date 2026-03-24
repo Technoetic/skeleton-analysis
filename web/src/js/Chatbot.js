@@ -398,7 +398,7 @@ ABSOLUTE RULES:
 
       // LLM natural language wrapping (facts are locked, style only)
 
-      const finalText = await this._naturalWrap(text, answer.text);
+      const finalText = answer.text; // 래핑 제거: 답변 프롬프트에서 직접 코치 톤 생성
 
       this._removeLoading();
 
@@ -2240,77 +2240,53 @@ RULES:
 
 
 
-    // ── Phase 3: Answer generation (2 calls parallel) ──
-
-    const answers = await Promise.all([
-
-      this._generateAnswer(question, dbResult, finalSQL, aggregated, 0),
-
-      this._generateAnswer(question, dbResult, finalSQL, aggregated, 0.3),
-
-    ]);
-
-
-
-    // ── Phase 4: Factcheck (2 calls parallel) ──
-
-    const factResults = await Promise.all(
-
-      answers.map(ans => this._llmFactcheck(ans, dbResult, aggregated))
-
+    // ── Phase 3: Answer generation (4 calls parallel + judge) ──
+    const answerTemps = [0, 0.3, 0.6, 0.9];
+    const answerLabels = ['A', 'B', 'C', 'D'];
+    const answers = await Promise.all(
+      answerTemps.map(t => this._generateAnswer(question, dbResult, finalSQL, aggregated, t))
     );
 
-
-
-    // Pick best answer: highest factcheck score
-
+    // Judge: LLM picks best answer with criteria scoring
     let bestIdx = 0;
+    try {
+      const judgePrompt = answers.map((a, i) =>
+        `[Answer ${answerLabels[i]}]
+${a}`
+      ).join('
 
-    let bestScore = -1;
+---
 
-    for (let i = 0; i < factResults.length; i++) {
+');
 
-      const score = this._parseFactScore(factResults[i]);
+      const judgeResp = await this._callLLM([
+        { role: 'system', content: `You are a strict answer judge for a sports database chatbot.
+Evaluate each answer on 5 criteria (score 1-10 each):
+1) Relevance: directly answers the question?
+2) Accuracy: all numbers match the provided DB stats?
+3) Comparison: if comparison question, are both subjects analyzed individually?
+4) Formatting: good markdown with tables, headers, bold numbers?
+5) Insight: provides useful analysis beyond raw numbers?
 
-      if (score > bestScore) {
+Reply ONLY in JSON: {"scores":{"A":[r,a,c,f,i],"B":[r,a,c,f,i],"C":[r,a,c,f,i],"D":[r,a,c,f,i]},"best":"X","reason":"brief reason"}` },
+        { role: 'user', content: `Question: ${question}
 
-        bestScore = score;
+DB Stats: ${JSON.stringify(aggregated)}
 
-        bestIdx = i;
+${judgePrompt}` },
+      ], 0);
 
-      }
+      const bestMatch = judgeResp.match(/"best"\s*:\s*"([ABCD])"/);
+      if (bestMatch) bestIdx = 'ABCD'.indexOf(bestMatch[1]);
+    } catch (e) { /* fallback to answer A */ }
 
-    }
+    // Code factcheck only (no LLM factcheck - saves 2 calls)
+    let finalAnswer = this._codeFactcheck(answers[bestIdx], dbResult, aggregated);
 
-
-
-    // If question matches a known pattern, ALWAYS use template (zero hallucination)
-
-    const qLow = question.toLowerCase();
-
-    const forceTemplate = ['최고', '최소', '가장 빠른', '가장 느린', '평균', 'best', 'worst', 'average', 'fastest', 'slowest', 'vs', '누가 빨라', '비교']
-
-      .some(k => qLow.includes(k));
-
-
-
-    let finalAnswer;
-
-    if (forceTemplate) {
-
+    // If code factcheck failed or answer too short, use template
+    if (!finalAnswer || finalAnswer.length < 20) {
       finalAnswer = this._templateFallback(question, dbResult, aggregated);
-
-    } else if (bestScore < 0.8) {
-
-      finalAnswer = this._templateFallback(question, dbResult, aggregated);
-
-    } else {
-
-      finalAnswer = this._codeFactcheck(answers[bestIdx], dbResult, aggregated);
-
     }
-
-
 
     return { text: finalAnswer };
 
@@ -3193,7 +3169,10 @@ Reply with ONLY the URL path after /rest/v1/ (no base URL):`;
 
     const resp = await this._callLLM([
 
-      { role: 'system', content: `You are a sports data analyst assistant. Answer in Korean.
+      { role: 'system', content: `You are a warm, encouraging sports coach and data analyst. Answer in Korean with rich markdown formatting.
+USE markdown: **bold** for key numbers, | tables | for comparisons, - bullets for lists, ## headers for sections.
+Tone: friendly coach who celebrates good results and gives constructive feedback.
+Keep answers detailed but structured (use tables for any comparison).
 
 CRITICAL RULES:
 
