@@ -1949,6 +1949,13 @@ button.secondary-btn:active {
 .chatbot-bubble.bot {
   background: rgba(255,255,255,0.08); color: #e0e8f0; border-bottom-left-radius: 4px;
 }
+.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.85em; }
+.md-table th { background: rgba(59,130,246,0.15); color: #93c5fd; padding: 6px 10px; text-align: left; border-bottom: 2px solid #1e3a5f; }
+.md-table td { padding: 5px 10px; border-bottom: 1px solid #1e3a5f; color: #e2e8f0; }
+.md-table tr:hover td { background: rgba(59,130,246,0.05); }
+.chatbot-bubble h3, .chatbot-bubble h4 { margin: 8px 0 4px; }
+.chatbot-bubble blockquote { border-left: 3px solid #3b82f6; padding: 4px 10px; margin: 6px 0; color: #94a3b8; }
+
 
 .chatbot-input-wrap {
   display: flex; gap: 6px; padding: 10px 12px;
@@ -9691,12 +9698,57 @@ RULES:
 
 
   _renderMd(s) {
+    if (!s) return '';
     let h = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    h = h.replace(/^###\s+(.+)$/gm, "<strong>$1</strong>");
-    h = h.replace(/^##\s+(.+)$/gm, "<strong>$1</strong>");
-    h = h.replace(/[*][*]([^*]+)[*][*]/g, "<strong>$1</strong>");
-    h = h.replace(/[*]([^*]+)[*]/g, "<em>$1</em>");
-    h = h.split(String.fromCharCode(10)).join("<br>");
+    // Tables: detect | col | col | lines
+    const lines = h.split(String.fromCharCode(10));
+    const out = [];
+    let inTable = false;
+    let tableRows = [];
+    const flushTable = () => {
+      if (tableRows.length < 2) { out.push(...tableRows); tableRows = []; inTable = false; return; }
+      let t = '<table class="md-table"><thead><tr>';
+      const hdrCells = tableRows[0].split('|').map(c => c.trim()).filter(c => c);
+      hdrCells.forEach(c => { t += '<th>' + c + '</th>'; });
+      t += '</tr></thead><tbody>';
+      for (let r = 1; r < tableRows.length; r++) {
+        if (/^[\s|:-]+$/.test(tableRows[r])) continue;
+        const cells = tableRows[r].split('|').map(c => c.trim()).filter(c => c);
+        t += '<tr>';
+        cells.forEach(c => { t += '<td>' + c + '</td>'; });
+        t += '</tr>';
+      }
+      t += '</tbody></table>';
+      out.push(t);
+      tableRows = [];
+      inTable = false;
+    };
+    for (const line of lines) {
+      if (/^\s*\|/.test(line)) {
+        inTable = true;
+        tableRows.push(line);
+      } else {
+        if (inTable) flushTable();
+        out.push(line);
+      }
+    }
+    if (inTable) flushTable();
+    h = out.join(String.fromCharCode(10));
+    // Headers
+    h = h.replace(/^###\s+(.+)$/gm, '<h4 style="margin:8px 0 4px;color:#f1f5f9">$1</h4>');
+    h = h.replace(/^##\s+(.+)$/gm, '<h3 style="margin:10px 0 4px;color:#f1f5f9">$1</h3>');
+    h = h.replace(/^#\s+(.+)$/gm, '<h3 style="margin:10px 0 4px;color:#f1f5f9">$1</h3>');
+    // Bold / italic
+    h = h.replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:#10b981">$1</strong>');
+    h = h.replace(/[*]([^*]+)[*]/g, '<em>$1</em>');
+    // Blockquote
+    h = h.replace(/^&gt;\s*(.+)$/gm, '<blockquote style="border-left:3px solid #3b82f6;padding:4px 10px;margin:6px 0;color:#94a3b8">$1</blockquote>');
+    // Bullet points
+    h = h.replace(/^[-*]\s+(.+)$/gm, '<div style="padding-left:12px">• $1</div>');
+    // Line breaks
+    h = h.split(String.fromCharCode(10)).join('<br>');
+    // Clean up multiple <br>
+    h = h.replace(/(<br>){3,}/g, '<br><br>');
     return h;
   }
 

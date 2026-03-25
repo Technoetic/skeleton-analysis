@@ -282,12 +282,57 @@ RULES:
 
 
   _renderMd(s) {
+    if (!s) return '';
     let h = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    h = h.replace(/^###\s+(.+)$/gm, "<strong>$1</strong>");
-    h = h.replace(/^##\s+(.+)$/gm, "<strong>$1</strong>");
-    h = h.replace(/[*][*]([^*]+)[*][*]/g, "<strong>$1</strong>");
-    h = h.replace(/[*]([^*]+)[*]/g, "<em>$1</em>");
-    h = h.split(String.fromCharCode(10)).join("<br>");
+    // Tables: detect | col | col | lines
+    const lines = h.split(String.fromCharCode(10));
+    const out = [];
+    let inTable = false;
+    let tableRows = [];
+    const flushTable = () => {
+      if (tableRows.length < 2) { out.push(...tableRows); tableRows = []; inTable = false; return; }
+      let t = '<table class="md-table"><thead><tr>';
+      const hdrCells = tableRows[0].split('|').map(c => c.trim()).filter(c => c);
+      hdrCells.forEach(c => { t += '<th>' + c + '</th>'; });
+      t += '</tr></thead><tbody>';
+      for (let r = 1; r < tableRows.length; r++) {
+        if (/^[\s|:-]+$/.test(tableRows[r])) continue;
+        const cells = tableRows[r].split('|').map(c => c.trim()).filter(c => c);
+        t += '<tr>';
+        cells.forEach(c => { t += '<td>' + c + '</td>'; });
+        t += '</tr>';
+      }
+      t += '</tbody></table>';
+      out.push(t);
+      tableRows = [];
+      inTable = false;
+    };
+    for (const line of lines) {
+      if (/^\s*\|/.test(line)) {
+        inTable = true;
+        tableRows.push(line);
+      } else {
+        if (inTable) flushTable();
+        out.push(line);
+      }
+    }
+    if (inTable) flushTable();
+    h = out.join(String.fromCharCode(10));
+    // Headers
+    h = h.replace(/^###\s+(.+)$/gm, '<h4 style="margin:8px 0 4px;color:#f1f5f9">$1</h4>');
+    h = h.replace(/^##\s+(.+)$/gm, '<h3 style="margin:10px 0 4px;color:#f1f5f9">$1</h3>');
+    h = h.replace(/^#\s+(.+)$/gm, '<h3 style="margin:10px 0 4px;color:#f1f5f9">$1</h3>');
+    // Bold / italic
+    h = h.replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:#10b981">$1</strong>');
+    h = h.replace(/[*]([^*]+)[*]/g, '<em>$1</em>');
+    // Blockquote
+    h = h.replace(/^&gt;\s*(.+)$/gm, '<blockquote style="border-left:3px solid #3b82f6;padding:4px 10px;margin:6px 0;color:#94a3b8">$1</blockquote>');
+    // Bullet points
+    h = h.replace(/^[-*]\s+(.+)$/gm, '<div style="padding-left:12px">• $1</div>');
+    // Line breaks
+    h = h.split(String.fromCharCode(10)).join('<br>');
+    // Clean up multiple <br>
+    h = h.replace(/(<br>){3,}/g, '<br><br>');
     return h;
   }
 
