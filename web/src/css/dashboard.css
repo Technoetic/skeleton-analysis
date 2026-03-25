@@ -316,11 +316,11 @@
   width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.72rem;
 }
 .chatbot-table th {
-  background: rgba(33,150,243,0.15); color: #7ab; padding: 4px 6px;
+  background: rgba(33,150,243,0.3); color: #e0f0ff; padding: 4px 6px;
   text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 .chatbot-table td {
-  padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cde;
+  padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.08); color: #ffffff;
 }
 .chatbot-table tr:hover td { background: rgba(255,255,255,0.03); }
 .chatbot-more { font-size: 0.7rem; color: #6a8a9a; text-align: center; margin-top: 4px; }
