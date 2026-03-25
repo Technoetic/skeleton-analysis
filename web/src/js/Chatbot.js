@@ -2320,9 +2320,10 @@ RULES:
           };
         }
       }
-      // Will be included in aggregated below
-      const agg = this._clientAggregateInner(data);
-      agg.per_player = playerStats;
+      // Build full aggregated with per_player
+      const agg = { count: data.length, per_player: playerStats };
+      const numCols = ["finish","start_time","int1","int2","int3","int4","speed"];
+      for (const col of numCols) { const vals = data.map(r => parseFloat(r[col])).filter(v => !isNaN(v) && v > 0); if (vals.length > 0) { agg[col+"_avg"] = +(vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(3); agg[col+"_min"] = +Math.min(...vals).toFixed(3); agg[col+"_max"] = +Math.max(...vals).toFixed(3); } }
       return agg;
     }
 
