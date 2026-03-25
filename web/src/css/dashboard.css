@@ -288,8 +288,8 @@
   background: rgba(255,255,255,0.08); color: #e0e8f0; border-bottom-left-radius: 4px;
 }
 .md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.85em; }
-.md-table th { background: rgba(59,130,246,0.15); color: #93c5fd; padding: 6px 10px; text-align: left; border-bottom: 2px solid #1e3a5f; }
-.md-table td { padding: 5px 10px; border-bottom: 1px solid #1e3a5f; color: #e2e8f0; }
+.md-table th { background: rgba(59,130,246,0.25); color: #bee3ff; padding: 6px 10px; text-align: left; border-bottom: 2px solid #1e3a5f; }
+.md-table td { padding: 5px 10px; border-bottom: 1px solid #1e3a5f; color: #ffffff; }
 .md-table tr:hover td { background: rgba(59,130,246,0.05); }
 .chatbot-bubble h3, .chatbot-bubble h4 { margin: 8px 0 4px; }
 .chatbot-bubble blockquote { border-left: 3px solid #3b82f6; padding: 4px 10px; margin: 6px 0; color: #94a3b8; }
@@ -305,7 +305,7 @@
   font-family: var(--font); outline: none;
 }
 #chatbot-input:focus { border-color: #00e5ff; }
-#chatbot-input::placeholder { color: #6a8a9a; }
+#chatbot-input::placeholder { color: #94a3b8; }
 #chatbot-send {
   background: #2196f3; border: none; border-radius: 8px;
   color: #fff; font-size: 1rem; padding: 8px 14px; cursor: pointer;
