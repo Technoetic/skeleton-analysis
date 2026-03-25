@@ -589,16 +589,16 @@ graph LR
 <td>
 <a href="https://github.com/Technoetic">
 <img src="https://github.com/Technoetic.png" width="120" style="border-radius:50%"/>
-<br/><b>Technoetic</b>
+<br/><b>전문준</b>
 </a>
-<br/>풀스택 / ML / 디자인
+<br/>풀스택 / 인프라 / LLM 파이프라인
 </td>
 <td>
 <a href="https://github.com/junhyeonkim92-oscar">
 <img src="https://github.com/junhyeonkim92-oscar.png" width="120" style="border-radius:50%"/>
-<br/><b>junhyeonkim92-oscar</b>
+<br/><b>김준현</b>
 </a>
-<br/>팀원
+<br/>기획 / 데이터 사이언스 / ML 모델링
 </td>
 </tr>
 </table>
