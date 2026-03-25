@@ -11570,7 +11570,7 @@ RULES:
 
     const rawSQL = this._pickConsensus(validSqls);
 
-    const finalSQL = this._injectFilters(rawSQL, tables);
+    const finalSQL = this._injectFilters(rawSQL, tables, question);
 
     console.log('[Chatbot] Raw SQL:', rawSQL);
 
@@ -12073,9 +12073,30 @@ Generate a single SELECT SQL query:`;
 
   // Inject mandatory filters into SQL (post-validation)
 
-  _injectFilters(sql, tables) {
+  _injectFilters(sql, tables, question) {
 
     const upper = sql.toUpperCase();
+
+    // Force inject player names from question if missing
+    if (question) {
+      const korNames = this._extractKoreanNames(question);
+      if (korNames.length >= 2) {
+        const resolved = korNames.map(n => this._korNameMap[n]).filter(Boolean);
+        if (resolved.length >= 2) {
+          const hasAllNames = resolved.every(eng => upper.includes(eng.split(' ')[0].toUpperCase()));
+          if (!hasAllNames) {
+            const nameConditions = resolved.map(eng => "name ILIKE '" + eng.split(' ')[0] + "%'").join(' OR ');
+            if (upper.includes('WHERE')) {
+              sql = sql.replace(/WHERE\s+/i, 'WHERE (' + nameConditions + ') AND ');
+            } else {
+              const insertPt = sql.search(/\s+(ORDER|LIMIT|GROUP)\s+/i);
+              if (insertPt > 0) sql = sql.slice(0, insertPt) + ' WHERE (' + nameConditions + ')' + sql.slice(insertPt);
+              else sql = sql + ' WHERE (' + nameConditions + ')';
+            }
+          }
+        }
+      }
+    }
 
     // Only inject into record tables (not athlete tables)
 
