@@ -11652,7 +11652,7 @@ RULES:
               ], 0);
               const bm = jr.match(/"best"\s*:\s*"([ABCD])"/);
               if (bm) bestIdx = 'ABCD'.indexOf(bm[1]);
-            } catch(e) {}
+            } catch(e) { console.log("[CMP-ERR]", e.message || e); }
             let finalAnswer = this._codeFactcheck(answers[bestIdx], _data, aggregated);
             if (!finalAnswer || finalAnswer.length < 20) finalAnswer = this._templateFallback(question, _data, aggregated);
             return { text: finalAnswer };
