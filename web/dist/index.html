@@ -12650,7 +12650,18 @@ CRITICAL RULES:
 6. CRITICAL for COMPARE questions (vs, 비교): You MUST analyze EACH player separately with their own stats (avg, min, max, count). Group the data by 'name' column and present BOTH players in a markdown table.
 7. If data is insufficient, say "데이터가 부족합니다".` },
 
-      { role: 'user', content: `Question: ${question}\n\nDB Result (${totalRows} rows, sample):\n${dataStr}\n\nAGGREGATED STATS (per_player contains individual stats for EACH player - you MUST use these):\n${aggStr}\n\nAnswer:` },
+      { role: 'user', content: `Question: ${question}
+
+DB Result (${totalRows} rows, sample of ${sampleData.length}):
+${dataStr}
+
+AGGREGATED STATS:
+${aggStr}
+
+${aggregated && aggregated.per_player ? "PER-PLAYER INDIVIDUAL STATS (MUST USE for comparisons):
+" + JSON.stringify(aggregated.per_player, null, 2) : ""}
+
+Answer:` },
 
     ], temperature);
 
