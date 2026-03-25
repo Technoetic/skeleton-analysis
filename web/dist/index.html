@@ -11605,6 +11605,32 @@ RULES:
           const _data = _results.flat().filter(r => Array.isArray(_results[0]) || true);
           if (Array.isArray(_data) && _data.length > 0) {
             const aggregated = this._clientAggregate(_data);
+            // Direct markdown generation for compare (no LLM dependency on data parsing)
+            if (aggregated.per_player && Object.keys(aggregated.per_player).length >= 2) {
+              const NL = String.fromCharCode(10);
+              let md = '## ' + _compareKorNames.join(' vs ') + ' 기록 비교' + NL + NL;
+              md += '| 선수 | 경기 수 | 평균 | 최고 | 최저 |' + NL;
+              md += '|------|---------|------|------|------|' + NL;
+              for (const [pname, ps] of Object.entries(aggregated.per_player)) {
+                md += '| ' + pname + ' | ' + ps.count + '건 | ' + ps.finish_avg + '초 | ' + ps.finish_min + '초 | ' + ps.finish_max + '초 |' + NL;
+              }
+              const entries = Object.entries(aggregated.per_player);
+              if (entries.length >= 2) {
+                const diff = (entries[1][1].finish_min - entries[0][1].finish_min).toFixed(2);
+                const faster = parseFloat(diff) > 0 ? entries[0][0] : entries[1][0];
+                md += NL + '> **' + faster + '**이(가) 최고 기록 기준 ' + Math.abs(parseFloat(diff)) + '초 빠름';
+              }
+              // Wrap with LLM for natural tone
+              try {
+                const wrapResp = await this._callLLM([
+                  { role: 'system', content: 'You are a sports coach. Rewrite the following data comparison in warm Korean. KEEP ALL numbers exactly. Use markdown. Add brief analysis.' },
+                  { role: 'user', content: md },
+                ], 0.3);
+                return { text: wrapResp };
+              } catch(e) {
+                return { text: md };
+              }
+            }
           // Build explicit compare context for LLM
           let _compareCtx = '';
           if (aggregated.per_player) {
