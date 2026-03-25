@@ -290,7 +290,7 @@
 }
 <<<<<<< HEAD
 .md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.75em; display: block; overflow-x: auto; white-space: nowrap; background: #141b2d !important; border-radius: 6px; }
-.md-table th { background: rgba(59,130,246,0.25) !important; color: #93c5fd !important; padding: 5px 8px; text-align: left; border-bottom: 2px solid #1e3a5f; white-space: nowrap !important; font-size: 0.85em; }
+.md-table th { background: rgba(59,130,246,0.4) !important; color: #ffffff !important; padding: 5px 8px; text-align: left; border-bottom: 2px solid #1e3a5f; white-space: nowrap !important; font-size: 0.85em; }
 .md-table td { padding: 5px 8px; border-bottom: 1px solid #1e3a5f; color: #94a3b8 !important; background: #141b2d !important; white-space: nowrap !important; }
 =======
 .md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.85em; background: transparent; }
