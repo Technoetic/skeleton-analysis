@@ -594,6 +594,15 @@ graph LR
 <br/>풀스택 / ML / 디자인
 </td>
 </tr>
+<tr align="center">
+<td>
+<a href="https://github.com/junhyeonkim92-oscar">
+<img src="https://github.com/junhyeonkim92-oscar.png" width="120" style="border-radius:50%"/>
+<br/><b>junhyeonkim92-oscar</b>
+</a>
+<br/>팀원
+</td>
+</tr>
 </table>
 
 ---
