@@ -2163,23 +2163,19 @@ RULES:
 
 
     // Compare shortcut: fetch each player separately in parallel
-    const _compareKorNames = this._extractKoreanNames(question); console.log("[CMP0] korNames:", _compareKorNames, "mapKeys:", Object.keys(this._korNameMap || {}), "resolved:", _compareKorNames.map(n => (this._korNameMap || {})[n]));
+    const _compareKorNames = this._extractKoreanNames(question); 
     if (_compareKorNames.length >= 2) {
       const _resolved = _compareKorNames.map(n => this._korNameMap[n]).filter(Boolean);
       if (_resolved.length >= 2) {
         const _h = { 'apikey': Chatbot.SUPABASE_KEY, 'Authorization': 'Bearer ' + Chatbot.SUPABASE_KEY };
         const _range = this.sport === 'skeleton' ? [50, 60] : [45, 65];
         try {
-          const _fetches = _resolved.map(eng => {
-            const url = Chatbot.SUPABASE_URL + '/rest/v1/' + tables.records
-              + '?select=name,finish,start_time,date,int1,int2,int3,int4,speed'
-              + '&name=eq.' + encodeURIComponent(eng)
-              + '&status=eq.OK&finish=gte.' + _range[0] + '&finish=lte.' + _range[1]
-              + '&order=finish&limit=200';
-            return fetch(url, { headers: _h }).then(r => r.json());
-          });
-          const _results = await Promise.all(_fetches);
-          const _data = _results.flat().filter(r => Array.isArray(_results[0]) || true);
+          // Use /api/records (cached, no CORS issues) + JS filter
+          const _apiResp = await fetch('/api/records');
+          const _allData = await _apiResp.json();
+          const _nameSet = new Set(_resolved);
+          const _data = _allData.filter(r => _nameSet.has(r.name) && r.status === 'OK' && r.finish >= _range[0] && r.finish <= _range[1]);
+          console.log('[CMP] filtered:', _data.length, 'players:', [...new Set(_data.map(r => r.name))]);
           if (Array.isArray(_data) && _data.length > 0) {
             const aggregated = this._clientAggregate(_data);
             console.log("[CMP] _data.length=", _data.length, "names:", [...new Set(_data.map(r=>r.name))]); console.log("[CMP] per_player:", aggregated.per_player); // Direct markdown generation for compare
