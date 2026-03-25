@@ -1942,6 +1942,7 @@ button.secondary-btn:active {
 .chatbot-bubble {
   max-width: 85%; padding: 8px 12px; border-radius: 12px;
   font-size: 0.82rem; line-height: 1.5; word-break: break-word;
+  overflow-x: auto;
 }
 .chatbot-bubble.user {
   background: #2196f3; color: #fff; border-bottom-right-radius: 4px;
@@ -1949,7 +1950,7 @@ button.secondary-btn:active {
 .chatbot-bubble.bot {
   background: rgba(255,255,255,0.08); color: #e0e8f0; border-bottom-left-radius: 4px;
 }
-.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.85em; }
+.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.8em; display: block; overflow-x: auto; white-space: nowrap; }
 .md-table th { background: rgba(59,130,246,0.15); color: #93c5fd; padding: 6px 10px; text-align: left; border-bottom: 2px solid #1e3a5f; }
 .md-table td { padding: 5px 10px; border-bottom: 1px solid #1e3a5f; color: #e2e8f0; }
 .md-table tr:hover td { background: rgba(59,130,246,0.05); }
