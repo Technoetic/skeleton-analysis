@@ -2163,7 +2163,7 @@ RULES:
 
 
     // Compare shortcut: fetch each player separately in parallel
-    const _compareKorNames = this._extractKoreanNames(question);
+    const _compareKorNames = this._extractKoreanNames(question); console.log("[CMP0] korNames:", _compareKorNames, "mapKeys:", Object.keys(this._korNameMap || {}), "resolved:", _compareKorNames.map(n => (this._korNameMap || {})[n]));
     if (_compareKorNames.length >= 2) {
       const _resolved = _compareKorNames.map(n => this._korNameMap[n]).filter(Boolean);
       if (_resolved.length >= 2) {
