@@ -3185,7 +3185,20 @@ Reply with ONLY the URL path after /rest/v1/ (no base URL):`;
 
   async _generateAnswer(question, dbResult, sql, aggregated, temperature = 0) {
 
-    const dataStr = JSON.stringify(dbResult.slice(0, 15));
+    // Smart sampling: for compare, take equal samples from each player
+    let sampleData;
+    const playerNames = [...new Set(dbResult.map(r => r.name).filter(Boolean))];
+    if (playerNames.length >= 2) {
+      const perPlayer = Math.floor(20 / playerNames.length);
+      sampleData = [];
+      for (const pn of playerNames) {
+        const pRows = dbResult.filter(r => r.name === pn);
+        sampleData.push(...pRows.slice(0, perPlayer));
+      }
+    } else {
+      sampleData = dbResult.slice(0, 15);
+    }
+    const dataStr = JSON.stringify(sampleData);
 
     const totalRows = dbResult.length;
 
