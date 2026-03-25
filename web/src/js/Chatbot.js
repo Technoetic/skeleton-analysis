@@ -398,7 +398,7 @@ ABSOLUTE RULES:
 
       // LLM natural language wrapping (facts are locked, style only)
 
-      const finalText = answer.text; // 래핑 제거: 답변 프롬프트에서 직접 코치 톤 생성
+      const finalText = answer.text;
 
       this._removeLoading();
 
@@ -2240,54 +2240,23 @@ RULES:
 
 
 
-    // ── Phase 3: Answer generation (4 calls parallel + judge) ──
+    // Phase 3: Answer generation (4 parallel + judge)
     const answerTemps = [0, 0.3, 0.6, 0.9];
     const answerLabels = ['A', 'B', 'C', 'D'];
-    const answers = await Promise.all(
-      answerTemps.map(t => this._generateAnswer(question, dbResult, finalSQL, aggregated, t))
-    );
-
-    // Judge: LLM picks best answer with criteria scoring
+    const answers = await Promise.all(answerTemps.map(t => this._generateAnswer(question, dbResult, finalSQL, aggregated, t)));
     let bestIdx = 0;
     try {
-      const judgePrompt = answers.map((a, i) =>
-        `[Answer ${answerLabels[i]}]
-${a}`
-      ).join('
-
----
-
-');
-
+      const NL = String.fromCharCode(10);
+      const judgePrompt = answers.map((a, i) => '[Answer ' + answerLabels[i] + ']' + NL + a).join(NL + NL + '---' + NL + NL);
       const judgeResp = await this._callLLM([
-        { role: 'system', content: `You are a strict answer judge for a sports database chatbot.
-Evaluate each answer on 5 criteria (score 1-10 each):
-1) Relevance: directly answers the question?
-2) Accuracy: all numbers match the provided DB stats?
-3) Comparison: if comparison question, are both subjects analyzed individually?
-4) Formatting: good markdown with tables, headers, bold numbers?
-5) Insight: provides useful analysis beyond raw numbers?
-
-Reply ONLY in JSON: {"scores":{"A":[r,a,c,f,i],"B":[r,a,c,f,i],"C":[r,a,c,f,i],"D":[r,a,c,f,i]},"best":"X","reason":"brief reason"}` },
-        { role: 'user', content: `Question: ${question}
-
-DB Stats: ${JSON.stringify(aggregated)}
-
-${judgePrompt}` },
+        { role: 'system', content: 'You are a strict answer judge for a sports DB chatbot. Evaluate each answer on 5 criteria (score 1-10): 1)Relevance 2)Accuracy 3)Comparison 4)Formatting 5)Insight. Reply ONLY in JSON format: {"scores":{"A":[r,a,c,f,i],"B":[r,a,c,f,i],"C":[r,a,c,f,i],"D":[r,a,c,f,i]},"best":"X","reason":"brief"}' },
+        { role: 'user', content: 'Question: ' + question + NL + 'DB Stats: ' + JSON.stringify(aggregated) + NL + NL + judgePrompt },
       ], 0);
-
       const bestMatch = judgeResp.match(/"best"\s*:\s*"([ABCD])"/);
       if (bestMatch) bestIdx = 'ABCD'.indexOf(bestMatch[1]);
-    } catch (e) { /* fallback to answer A */ }
-
-    // Code factcheck only (no LLM factcheck - saves 2 calls)
+    } catch (e) { /* fallback to A */ }
     let finalAnswer = this._codeFactcheck(answers[bestIdx], dbResult, aggregated);
-
-    // If code factcheck failed or answer too short, use template
-    if (!finalAnswer || finalAnswer.length < 20) {
-      finalAnswer = this._templateFallback(question, dbResult, aggregated);
-    }
-
+    if (!finalAnswer || finalAnswer.length < 20) finalAnswer = this._templateFallback(question, dbResult, aggregated);
     return { text: finalAnswer };
 
   }
@@ -3169,10 +3138,7 @@ Reply with ONLY the URL path after /rest/v1/ (no base URL):`;
 
     const resp = await this._callLLM([
 
-      { role: 'system', content: `You are a warm, encouraging sports coach and data analyst. Answer in Korean with rich markdown formatting.
-USE markdown: **bold** for key numbers, | tables | for comparisons, - bullets for lists, ## headers for sections.
-Tone: friendly coach who celebrates good results and gives constructive feedback.
-Keep answers detailed but structured (use tables for any comparison).
+      { role: 'system', content: `You are a warm sports coach and data analyst. Answer in Korean with markdown (bold, tables, bullets).
 
 CRITICAL RULES:
 
