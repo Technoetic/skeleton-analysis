@@ -598,7 +598,7 @@ graph LR
 <img src="https://github.com/junhyeonkim92-oscar.png" width="120" style="border-radius:50%"/>
 <br/><b>김준현</b>
 </a>
-<br/>기획 / 데이터 사이언스 / ML 모델링
+<br/>기획 / 스포츠 애널리틱스 / ML 모델링
 </td>
 </tr>
 </table>
