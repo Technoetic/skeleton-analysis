@@ -89,6 +89,7 @@ IMPORTANT - NAME FORMAT:
 
 
 RULES:
+- ALWAYS include 'name' column in SELECT when query involves specific players or comparisons
 
 1. ONLY generate SELECT queries. Never INSERT/UPDATE/DELETE.
 
@@ -2494,7 +2495,8 @@ Categories: record_query, player_compare, environment_analysis, prediction, coac
 
 - If the input is just a player name (e.g. "여찬혁", "김지수"), classify as record_query.
 
-- If it's about weather/temperature/humidity, classify as environment_analysis.
+- If it asks about CURRENT/REALTIME/TODAY weather only, classify as environment_analysis.
+- If it asks about EFFECT of frost/temperature/humidity/wind on RECORDS, classify as record_query (NOT environment_analysis).
 
 - If it asks to compare two or more players, classify as player_compare.
 - If it is about improving performance, winning medals, training tips, coaching advice, how to get faster, role models, benchmark players, or who to learn from, classify as coaching.
