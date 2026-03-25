@@ -11605,6 +11605,13 @@ RULES:
           const _data = _results.flat().filter(r => Array.isArray(_results[0]) || true);
           if (Array.isArray(_data) && _data.length > 0) {
             const aggregated = this._clientAggregate(_data);
+          // Build explicit compare context for LLM
+          let _compareCtx = '';
+          if (aggregated.per_player) {
+            for (const [pname, pstats] of Object.entries(aggregated.per_player)) {
+              _compareCtx += pname + ': ' + pstats.count + '건, 평균 ' + pstats.finish_avg + '초, 최고 ' + pstats.finish_min + '초, 최저 ' + pstats.finish_max + '초' + String.fromCharCode(10);
+            }
+          }
             const answers = await Promise.all(
               [0, 0.3, 0.6, 0.9].map(t => this._generateAnswer(question, _data, 'REST or= direct', aggregated, t))
             );
