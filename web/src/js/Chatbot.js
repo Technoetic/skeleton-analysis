@@ -105,17 +105,17 @@ RULES:
 
 7. Use Supabase PostgREST syntax is NOT needed — use standard SQL.
 
-8. Limit results to 50 rows max.
+8. Limit results: use LIMIT 100 minimum for compare queries, LIMIT 50 for single player, LIMIT 200 for general queries.
 
 9. For name searches, use ILIKE for fuzzy matching.
 
 10. "평균 기록" = AVG(finish), "최고 기록" = MIN(finish), "최저 기록" = MAX(finish).
 
-11. If the user inputs ONLY a player name (e.g. "여찬혁"), return that player's records: SELECT * FROM {records_table} WHERE name ILIKE '{romanized}%' AND status='OK' ORDER BY finish ASC LIMIT 20
+11. If the user inputs ONLY a player name (e.g. "여찬혁"), return ALL records: SELECT name, finish, start_time, date, int1, int2, int3, int4 FROM {records_table} WHERE name ILIKE '{romanized}%' AND status='OK' AND finish > 45 AND finish < 65 ORDER BY date DESC LIMIT 200
 
 12. ALWAYS include a WHERE clause with the player name when a name is mentioned.
 
-13. For COMPARE queries (vs, 비교, 누가): use OR to include BOTH players. Example: "김지수 vs 정승기" → SELECT * FROM skeleton_records WHERE (name ILIKE 'KIM Ji%' OR name ILIKE 'JUNG Seung%') AND status='OK' ORDER BY finish ASC LIMIT 40
+13. CRITICAL — For COMPARE queries (vs, 비교, 누가): MUST use OR to include ALL mentioned players. Use LIMIT 200. Example: "김지수 vs 정승기" → SELECT name, finish, start_time, date FROM skeleton_records WHERE (name ILIKE 'KIM Ji%' OR name ILIKE 'JUNG Seung%') AND status='OK' AND finish > 45 AND finish < 65 ORDER BY name, finish ASC LIMIT 200
 
 14. When two Korean names are mentioned, ALWAYS include BOTH in the WHERE clause with OR.`;
 
