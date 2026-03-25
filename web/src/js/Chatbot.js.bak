@@ -89,7 +89,6 @@ IMPORTANT - NAME FORMAT:
 
 
 RULES:
-- ALWAYS include 'name' column in SELECT when query involves specific players or comparisons
 
 1. ONLY generate SELECT queries. Never INSERT/UPDATE/DELETE.
 
@@ -105,17 +104,17 @@ RULES:
 
 7. Use Supabase PostgREST syntax is NOT needed — use standard SQL.
 
-8. Limit results: use LIMIT 100 minimum for compare queries, LIMIT 50 for single player, LIMIT 200 for general queries.
+8. Limit results to 50 rows max.
 
 9. For name searches, use ILIKE for fuzzy matching.
 
 10. "평균 기록" = AVG(finish), "최고 기록" = MIN(finish), "최저 기록" = MAX(finish).
 
-11. If the user inputs ONLY a player name (e.g. "여찬혁"), return ALL records: SELECT name, finish, start_time, date, int1, int2, int3, int4 FROM {records_table} WHERE name ILIKE '{romanized}%' AND status='OK' AND finish > 45 AND finish < 65 ORDER BY date DESC LIMIT 200
+11. If the user inputs ONLY a player name (e.g. "여찬혁"), return that player's records: SELECT * FROM {records_table} WHERE name ILIKE '{romanized}%' AND status='OK' ORDER BY finish ASC LIMIT 20
 
 12. ALWAYS include a WHERE clause with the player name when a name is mentioned.
 
-13. CRITICAL — For COMPARE queries (vs, 비교, 누가): MUST use OR to include ALL mentioned players. Use LIMIT 200. Example: "김지수 vs 정승기" → SELECT name, finish, start_time, date FROM skeleton_records WHERE (name ILIKE 'KIM Ji%' OR name ILIKE 'JUNG Seung%') AND status='OK' AND finish > 45 AND finish < 65 ORDER BY name, finish ASC LIMIT 200
+13. For COMPARE queries (vs, 비교, 누가): use OR to include BOTH players. Example: "김지수 vs 정승기" → SELECT * FROM skeleton_records WHERE (name ILIKE 'KIM Ji%' OR name ILIKE 'JUNG Seung%') AND status='OK' ORDER BY finish ASC LIMIT 40
 
 14. When two Korean names are mentioned, ALWAYS include BOTH in the WHERE clause with OR.`;
 
@@ -126,13 +125,6 @@ RULES:
     this.messages = [];
 
     this.sport = typeof CURRENT_SPORT !== 'undefined' ? CURRENT_SPORT : 'skeleton';
-
-    this._korNameMap = {
-      '여찬혁': 'YEO Chanhyuk', '김지수': 'KIM Jisoo', '홍수정': 'HONG Sujung',
-      '정승기': 'JUNG Seunggi', '신연수': 'SHIN Yeonsu', '이승훈': 'LEE Seunghun',
-      '정예은': 'JUNG Yeeun', '안재웅': 'AHN Jaeung', '박예운': 'PARK Yewoon',
-      '송영민': 'SONG Youngmin', '곽은우': 'KWACK Eunwoo',
-    };
 
     this._initUI();
 
@@ -289,57 +281,12 @@ RULES:
 
 
   _renderMd(s) {
-    if (!s) return '';
     let h = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    // Tables: detect | col | col | lines
-    const lines = h.split(String.fromCharCode(10));
-    const out = [];
-    let inTable = false;
-    let tableRows = [];
-    const flushTable = () => {
-      if (tableRows.length < 2) { out.push(...tableRows); tableRows = []; inTable = false; return; }
-      let t = '<table class="md-table"><thead><tr>';
-      const hdrCells = tableRows[0].split('|').map(c => c.trim()).filter(c => c);
-      hdrCells.forEach(c => { t += '<th>' + c + '</th>'; });
-      t += '</tr></thead><tbody>';
-      for (let r = 1; r < tableRows.length; r++) {
-        if (/^[\s|:-]+$/.test(tableRows[r])) continue;
-        const cells = tableRows[r].split('|').map(c => c.trim()).filter(c => c);
-        t += '<tr>';
-        cells.forEach(c => { t += '<td>' + c + '</td>'; });
-        t += '</tr>';
-      }
-      t += '</tbody></table>';
-      out.push(t);
-      tableRows = [];
-      inTable = false;
-    };
-    for (const line of lines) {
-      if (/^\s*\|/.test(line)) {
-        inTable = true;
-        tableRows.push(line);
-      } else {
-        if (inTable) flushTable();
-        out.push(line);
-      }
-    }
-    if (inTable) flushTable();
-    h = out.join(String.fromCharCode(10));
-    // Headers
-    h = h.replace(/^###\s+(.+)$/gm, '<h4 style="margin:8px 0 4px;color:#f1f5f9">$1</h4>');
-    h = h.replace(/^##\s+(.+)$/gm, '<h3 style="margin:10px 0 4px;color:#f1f5f9">$1</h3>');
-    h = h.replace(/^#\s+(.+)$/gm, '<h3 style="margin:10px 0 4px;color:#f1f5f9">$1</h3>');
-    // Bold / italic
-    h = h.replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:#10b981">$1</strong>');
-    h = h.replace(/[*]([^*]+)[*]/g, '<em>$1</em>');
-    // Blockquote
-    h = h.replace(/^&gt;\s*(.+)$/gm, '<blockquote style="border-left:3px solid #3b82f6;padding:4px 10px;margin:6px 0;color:#94a3b8">$1</blockquote>');
-    // Bullet points
-    h = h.replace(/^[-*]\s+(.+)$/gm, '<div style="padding-left:12px">• $1</div>');
-    // Line breaks
-    h = h.split(String.fromCharCode(10)).join('<br>');
-    // Clean up multiple <br>
-    h = h.replace(/(<br>){3,}/g, '<br><br>');
+    h = h.replace(/^###\s+(.+)$/gm, "<strong>$1</strong>");
+    h = h.replace(/^##\s+(.+)$/gm, "<strong>$1</strong>");
+    h = h.replace(/[*][*]([^*]+)[*][*]/g, "<strong>$1</strong>");
+    h = h.replace(/[*]([^*]+)[*]/g, "<em>$1</em>");
+    h = h.split(String.fromCharCode(10)).join("<br>");
     return h;
   }
 
@@ -451,7 +398,7 @@ ABSOLUTE RULES:
 
       // LLM natural language wrapping (facts are locked, style only)
 
-      const finalText = answer.text;
+      const finalText = await this._naturalWrap(text, answer.text);
 
       this._removeLoading();
 
@@ -2062,8 +2009,97 @@ RULES:
 
 
 
-    // Phase 0~Shortcuts removed: all questions go through dynamic pipeline
+    // ── Phase 0: 키워드 사전 분류 (intent 분류보다 우선) ──
+    const _q = question.toLowerCase();
+    const _kwMap = [
+      { keys: ['잘하','제일','최고','1등','누가 가장'], func: 'consistency' },
+      { keys: ['서리','결빙'], func: 'frost' },
+      { keys: ['습도','습한','건조','비 오'], func: 'humidity' },
+      { keys: ['바람','풍속','돌풍'], func: 'wind' },
+      { keys: ['체중','몸무게','체격'], func: 'body_effect' },
+      { keys: ['피로','지치','후반'], func: 'run_fatigue' },
+      { keys: ['추이','추세','성장','요즘'], func: 'trend' },
+    ];
+    for (const {keys, func} of _kwMap) {
+      if (keys.some(k => _q.includes(k))) {
+        const _h = { 'apikey': Chatbot.SUPABASE_KEY, 'Authorization': 'Bearer ' + Chatbot.SUPABASE_KEY };
+        const _baseUrl = Chatbot.SUPABASE_URL + '/rest/v1/' + tables.records;
+        const _range = this.sport === 'skeleton' ? [50, 60] : [45, 65];
+        const _r = await this._execInsightFunc(func, question, _baseUrl, _h, _range, tables);
+        if (_r && _r.text) return _r;
+      }
+    }
+
+
+    // Compare shortcut FIRST: detect 2+ Korean names → direct DB fetch (no LLM needed)
+
     const korNames = this._extractKoreanNames(question);
+
+    if (korNames.length >= 2 && this._isCompareQuestion(question)) {
+
+      // Run compare + head_to_head in parallel
+
+      const [compareResult, h2hResult] = await Promise.all([
+
+        this._compareQuery(korNames, tables),
+
+        this._execInsightFunc('head_to_head', question, `${Chatbot.SUPABASE_URL}/rest/v1/${tables.records}`,
+
+          { 'apikey': Chatbot.SUPABASE_KEY, 'Authorization': 'Bearer ' + Chatbot.SUPABASE_KEY },
+
+          this.sport === 'skeleton' ? [50, 60] : [45, 65], tables),
+
+      ]);
+
+      let text = compareResult.text;
+
+      if (h2hResult) text += '\n\n' + h2hResult.text;
+
+      return { text };
+
+    }
+
+
+
+    // Insight shortcut: detect analytical questions → direct DB computation (no LLM SQL)
+
+    const insight = await this._detectInsight(question, tables);
+
+    if (insight) return insight;
+
+
+
+    // Single Korean name shortcut → direct DB fetch
+
+    if (korNames.length === 1 && question.trim().length <= 10) {
+
+      const resolved = await this._resolveKoreanName(korNames[0], tables);
+
+      if (resolved) {
+
+        const range = this.sport === 'skeleton' ? [50, 60] : [45, 65];
+
+        const h = { 'apikey': Chatbot.SUPABASE_KEY, 'Authorization': 'Bearer ' + Chatbot.SUPABASE_KEY };
+
+        const url = `${Chatbot.SUPABASE_URL}/rest/v1/${tables.records}?select=finish,start_time,date&name=eq.${encodeURIComponent(resolved.engName)}&status=eq.OK&finish=gte.${range[0]}&finish=lte.${range[1]}&order=finish&limit=50`;
+
+        const resp = await fetch(url, { headers: h });
+
+        const data = await resp.json();
+
+        if (data.length > 0) {
+
+          const agg = this._clientAggregate(data);
+
+          return { text: this._templateFallback(question, data, agg) };
+
+        }
+
+      }
+
+    }
+
+
 
     // ── Phase 1: Intent + SQL generation (4 calls parallel) ──
 
@@ -2154,58 +2190,13 @@ RULES:
 
     const rawSQL = this._pickConsensus(validSqls);
 
-    const finalSQL = this._injectFilters(rawSQL, tables, question);
+    const finalSQL = this._injectFilters(rawSQL, tables);
 
     console.log('[Chatbot] Raw SQL:', rawSQL);
 
     console.log('[Chatbot] Final SQL:', finalSQL);
 
 
-
-    // Compare shortcut: fetch each player separately in parallel
-    console.log('[COMPARE] korNames:', _compareKorNames);
-    const _compareKorNames = this._extractKoreanNames(question);
-    if (_compareKorNames.length >= 2) {
-      const _resolved = _compareKorNames.map(n => this._korNameMap[n]).filter(Boolean);
-      if (_resolved.length >= 2) {
-        const _h = { 'apikey': Chatbot.SUPABASE_KEY, 'Authorization': 'Bearer ' + Chatbot.SUPABASE_KEY };
-        const _range = this.sport === 'skeleton' ? [50, 60] : [45, 65];
-        try {
-          const _fetches = _resolved.map(eng => {
-            const url = Chatbot.SUPABASE_URL + '/rest/v1/' + tables.records
-              + '?select=name,finish,start_time,date,int1,int2,int3,int4,speed'
-              + '&name=eq.' + encodeURIComponent(eng)
-              + '&status=eq.OK&finish=gte.' + _range[0] + '&finish=lte.' + _range[1]
-              + '&order=finish&limit=200';
-            return fetch(url, { headers: _h }).then(r => r.json());
-          });
-          const _results = await Promise.all(_fetches);
-          console.log('[COMPARE] fetched:', _results.map(r => r.length));
-          const _data = _results.flat().filter(r => Array.isArray(_results[0]) || true);
-          if (Array.isArray(_data) && _data.length > 0) {
-            const aggregated = this._clientAggregate(_data);
-            const answers = await Promise.all(
-              [0, 0.3, 0.6, 0.9].map(t => this._generateAnswer(question, _data, 'REST or= direct', aggregated, t))
-            );
-            let bestIdx = 0;
-            try {
-              const NL = String.fromCharCode(10);
-              const labels = ['A','B','C','D'];
-              const jp = answers.map((a,i) => '[Answer ' + labels[i] + ']' + NL + a).join(NL+NL+'---'+NL+NL);
-              const jr = await this._callLLM([
-                { role: 'system', content: 'You are a strict answer judge. Evaluate on 5 criteria (1-10): 1)Relevance 2)Accuracy 3)Comparison 4)Formatting 5)Insight. Reply ONLY JSON: {"best":"X"}' },
-                { role: 'user', content: 'Question: ' + question + NL + 'DB Stats: ' + JSON.stringify(aggregated) + NL + NL + jp },
-              ], 0);
-              const bm = jr.match(/"best"\s*:\s*"([ABCD])"/);
-              if (bm) bestIdx = 'ABCD'.indexOf(bm[1]);
-            } catch(e) {}
-            let finalAnswer = this._codeFactcheck(answers[bestIdx], _data, aggregated);
-            if (!finalAnswer || finalAnswer.length < 20) finalAnswer = this._templateFallback(question, _data, aggregated);
-            return { text: finalAnswer };
-          }
-        } catch(e) {}
-      }
-    }
 
     // ── Phase 2: DB execution ──
 
@@ -2249,23 +2240,78 @@ RULES:
 
 
 
-    // Phase 3: Answer generation (4 parallel + judge)
-    const answerTemps = [0, 0.3, 0.6, 0.9];
-    const answerLabels = ['A', 'B', 'C', 'D'];
-    const answers = await Promise.all(answerTemps.map(t => this._generateAnswer(question, dbResult, finalSQL, aggregated, t)));
+    // ── Phase 3: Answer generation (2 calls parallel) ──
+
+    const answers = await Promise.all([
+
+      this._generateAnswer(question, dbResult, finalSQL, aggregated, 0),
+
+      this._generateAnswer(question, dbResult, finalSQL, aggregated, 0.3),
+
+    ]);
+
+
+
+    // ── Phase 4: Factcheck (2 calls parallel) ──
+
+    const factResults = await Promise.all(
+
+      answers.map(ans => this._llmFactcheck(ans, dbResult, aggregated))
+
+    );
+
+
+
+    // Pick best answer: highest factcheck score
+
     let bestIdx = 0;
-    try {
-      const NL = String.fromCharCode(10);
-      const judgePrompt = answers.map((a, i) => '[Answer ' + answerLabels[i] + ']' + NL + a).join(NL + NL + '---' + NL + NL);
-      const judgeResp = await this._callLLM([
-        { role: 'system', content: 'You are a strict answer judge for a sports DB chatbot. Evaluate each answer on 5 criteria (score 1-10): 1)Relevance 2)Accuracy 3)Comparison 4)Formatting 5)Insight. Reply ONLY in JSON format: {"scores":{"A":[r,a,c,f,i],"B":[r,a,c,f,i],"C":[r,a,c,f,i],"D":[r,a,c,f,i]},"best":"X","reason":"brief"}' },
-        { role: 'user', content: 'Question: ' + question + NL + 'DB Stats: ' + JSON.stringify(aggregated) + NL + NL + judgePrompt },
-      ], 0);
-      const bestMatch = judgeResp.match(/"best"\s*:\s*"([ABCD])"/);
-      if (bestMatch) bestIdx = 'ABCD'.indexOf(bestMatch[1]);
-    } catch (e) { /* fallback to A */ }
-    let finalAnswer = this._codeFactcheck(answers[bestIdx], dbResult, aggregated);
-    if (!finalAnswer || finalAnswer.length < 20) finalAnswer = this._templateFallback(question, dbResult, aggregated);
+
+    let bestScore = -1;
+
+    for (let i = 0; i < factResults.length; i++) {
+
+      const score = this._parseFactScore(factResults[i]);
+
+      if (score > bestScore) {
+
+        bestScore = score;
+
+        bestIdx = i;
+
+      }
+
+    }
+
+
+
+    // If question matches a known pattern, ALWAYS use template (zero hallucination)
+
+    const qLow = question.toLowerCase();
+
+    const forceTemplate = ['최고', '최소', '가장 빠른', '가장 느린', '평균', 'best', 'worst', 'average', 'fastest', 'slowest', 'vs', '누가 빨라', '비교']
+
+      .some(k => qLow.includes(k));
+
+
+
+    let finalAnswer;
+
+    if (forceTemplate) {
+
+      finalAnswer = this._templateFallback(question, dbResult, aggregated);
+
+    } else if (bestScore < 0.8) {
+
+      finalAnswer = this._templateFallback(question, dbResult, aggregated);
+
+    } else {
+
+      finalAnswer = this._codeFactcheck(answers[bestIdx], dbResult, aggregated);
+
+    }
+
+
+
     return { text: finalAnswer };
 
   }
@@ -2273,31 +2319,6 @@ RULES:
 
 
   _clientAggregate(data) {
-    // Per-player aggregation for compare questions
-    const byPlayer = {};
-    for (const r of data) {
-      const n = r.name || 'unknown';
-      if (!byPlayer[n]) byPlayer[n] = [];
-      byPlayer[n].push(r);
-    }
-    if (Object.keys(byPlayer).length >= 2) {
-      const playerStats = {};
-      for (const [name, rows] of Object.entries(byPlayer)) {
-        const finishes = rows.map(r => parseFloat(r.finish)).filter(v => !isNaN(v) && v > 0);
-        if (finishes.length > 0) {
-          playerStats[name] = {
-            count: finishes.length,
-            finish_avg: +(finishes.reduce((a,b) => a+b, 0) / finishes.length).toFixed(3),
-            finish_min: +Math.min(...finishes).toFixed(3),
-            finish_max: +Math.max(...finishes).toFixed(3),
-          };
-        }
-      }
-      // Will be included in aggregated below
-      const agg = this._clientAggregateInner(data);
-      agg.per_player = playerStats;
-      return agg;
-    }
 
     if (!data || data.length === 0) return {};
 
@@ -2617,8 +2638,7 @@ Categories: record_query, player_compare, environment_analysis, prediction, coac
 
 - If the input is just a player name (e.g. "여찬혁", "김지수"), classify as record_query.
 
-- If it asks about CURRENT/REALTIME/TODAY weather only, classify as environment_analysis.
-- If it asks about EFFECT of frost/temperature/humidity/wind on RECORDS, classify as record_query (NOT environment_analysis).
+- If it's about weather/temperature/humidity, classify as environment_analysis.
 
 - If it asks to compare two or more players, classify as player_compare.
 - If it is about improving performance, winning medals, training tips, coaching advice, how to get faster, role models, benchmark players, or who to learn from, classify as coaching.
@@ -2727,35 +2747,9 @@ Generate a single SELECT SQL query:`;
 
   // Inject mandatory filters into SQL (post-validation)
 
-  _injectFilters(sql, tables, question) {
+  _injectFilters(sql, tables) {
 
     const upper = sql.toUpperCase();
-
-    // Force inject player names: remove existing name filter, add OR for all mentioned players
-    if (question) {
-      const korNames = this._extractKoreanNames(question);
-      if (korNames.length >= 2) {
-        const resolved = korNames.map(n => this._korNameMap[n]).filter(Boolean);
-        if (resolved.length >= 2) {
-          // Remove existing name ILIKE conditions
-          sql = sql.replace(/AND\s+name\s+ILIKE\s+'[^']*'/gi, '');
-          sql = sql.replace(/name\s+ILIKE\s+'[^']*'\s+AND/gi, '');
-          sql = sql.replace(/name\s+ILIKE\s+'[^']*'/gi, '');
-          sql = sql.replace(/name\s*=\s*'[^']*'/gi, '');
-          // Build OR condition for all players
-          const nameConditions = resolved.map(eng => "name ILIKE '" + eng.split(' ')[0] + "%'").join(' OR ');
-          if (/WHERE/i.test(sql)) {
-            sql = sql.replace(/WHERE\s+/i, 'WHERE (' + nameConditions + ') AND ');
-          } else {
-            const insertPt = sql.search(/\s+(ORDER|LIMIT|GROUP)\s+/i);
-            if (insertPt > 0) sql = sql.slice(0, insertPt) + ' WHERE (' + nameConditions + ')' + sql.slice(insertPt);
-            else sql = sql + ' WHERE (' + nameConditions + ')';
-          }
-          // Ensure LIMIT is at least 200
-          sql = sql.replace(/LIMIT\s+\d+/i, 'LIMIT 200');
-        }
-      }
-    }
 
     // Only inject into record tables (not athlete tables)
 
@@ -3189,20 +3183,7 @@ Reply with ONLY the URL path after /rest/v1/ (no base URL):`;
 
   async _generateAnswer(question, dbResult, sql, aggregated, temperature = 0) {
 
-    // Smart sampling: for compare, take equal samples from each player
-    let sampleData;
-    const playerNames = [...new Set(dbResult.map(r => r.name).filter(Boolean))];
-    if (playerNames.length >= 2) {
-      const perPlayer = Math.floor(20 / playerNames.length);
-      sampleData = [];
-      for (const pn of playerNames) {
-        const pRows = dbResult.filter(r => r.name === pn);
-        sampleData.push(...pRows.slice(0, perPlayer));
-      }
-    } else {
-      sampleData = dbResult.slice(0, 15);
-    }
-    const dataStr = JSON.stringify(sampleData);
+    const dataStr = JSON.stringify(dbResult.slice(0, 15));
 
     const totalRows = dbResult.length;
 
@@ -3212,7 +3193,7 @@ Reply with ONLY the URL path after /rest/v1/ (no base URL):`;
 
     const resp = await this._callLLM([
 
-      { role: 'system', content: `You are a warm sports coach and data analyst. Answer in Korean with markdown (bold, tables, bullets).
+      { role: 'system', content: `You are a sports data analyst assistant. Answer in Korean.
 
 CRITICAL RULES:
 
@@ -3226,8 +3207,7 @@ CRITICAL RULES:
 
 5. Do NOT add opinions, predictions, or info not in the data.
 
-6. CRITICAL for COMPARE questions (vs, 비교): You MUST analyze EACH player separately with their own stats (avg, min, max, count). Group the data by 'name' column and present BOTH players in a markdown table.
-7. If data is insufficient, say "데이터가 부족합니다".` },
+6. If data is insufficient, say "데이터가 부족합니다".` },
 
       { role: 'user', content: `Question: ${question}\n\nDB Result (${totalRows} rows, sample):\n${dataStr}\n\nAGGREGATED STATS:\n${aggStr}\n\nAnswer:` },
 

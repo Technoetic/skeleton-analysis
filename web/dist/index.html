@@ -11586,6 +11586,7 @@ RULES:
 
 
     // Compare shortcut: fetch each player separately in parallel
+    console.log('[COMPARE] korNames:', _compareKorNames);
     const _compareKorNames = this._extractKoreanNames(question);
     if (_compareKorNames.length >= 2) {
       const _resolved = _compareKorNames.map(n => this._korNameMap[n]).filter(Boolean);
@@ -11602,6 +11603,7 @@ RULES:
             return fetch(url, { headers: _h }).then(r => r.json());
           });
           const _results = await Promise.all(_fetches);
+          console.log('[COMPARE] fetched:', _results.map(r => r.length));
           const _data = _results.flat().filter(r => Array.isArray(_results[0]) || true);
           if (Array.isArray(_data) && _data.length > 0) {
             const aggregated = this._clientAggregate(_data);
