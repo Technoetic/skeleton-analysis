@@ -313,7 +313,7 @@
 #chatbot-send:hover { background: #1976d2; }
 
 .chatbot-table {
-  width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.72rem;
+  width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.72rem; background: transparent;
 }
 .chatbot-table th {
   background: rgba(33,150,243,0.3); color: #e0f0ff; padding: 4px 6px;
