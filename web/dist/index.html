@@ -11651,6 +11651,31 @@ RULES:
 
 
   _clientAggregate(data) {
+    // Per-player aggregation for compare questions
+    const byPlayer = {};
+    for (const r of data) {
+      const n = r.name || 'unknown';
+      if (!byPlayer[n]) byPlayer[n] = [];
+      byPlayer[n].push(r);
+    }
+    if (Object.keys(byPlayer).length >= 2) {
+      const playerStats = {};
+      for (const [name, rows] of Object.entries(byPlayer)) {
+        const finishes = rows.map(r => parseFloat(r.finish)).filter(v => !isNaN(v) && v > 0);
+        if (finishes.length > 0) {
+          playerStats[name] = {
+            count: finishes.length,
+            finish_avg: +(finishes.reduce((a,b) => a+b, 0) / finishes.length).toFixed(3),
+            finish_min: +Math.min(...finishes).toFixed(3),
+            finish_max: +Math.max(...finishes).toFixed(3),
+          };
+        }
+      }
+      // Will be included in aggregated below
+      const agg = this._clientAggregateInner(data);
+      agg.per_player = playerStats;
+      return agg;
+    }
 
     if (!data || data.length === 0) return {};
 
@@ -12566,7 +12591,8 @@ CRITICAL RULES:
 
 5. Do NOT add opinions, predictions, or info not in the data.
 
-6. If data is insufficient, say "데이터가 부족합니다".` },
+6. CRITICAL for COMPARE questions (vs, 비교): You MUST analyze EACH player separately with their own stats (avg, min, max, count). Group the data by 'name' column and present BOTH players in a markdown table.
+7. If data is insufficient, say "데이터가 부족합니다".` },
 
       { role: 'user', content: `Question: ${question}\n\nDB Result (${totalRows} rows, sample):\n${dataStr}\n\nAGGREGATED STATS:\n${aggStr}\n\nAnswer:` },
 
