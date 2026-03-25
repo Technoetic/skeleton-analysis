@@ -11605,7 +11605,7 @@ RULES:
           const _data = _results.flat().filter(r => Array.isArray(_results[0]) || true);
           if (Array.isArray(_data) && _data.length > 0) {
             const aggregated = this._clientAggregate(_data);
-            // Direct markdown generation for compare (no LLM dependency on data parsing)
+            console.log("[CMP] _data.length=", _data.length, "names:", [...new Set(_data.map(r=>r.name))]); console.log("[CMP] per_player:", aggregated.per_player); // Direct markdown generation for compare
             if (aggregated.per_player && Object.keys(aggregated.per_player).length >= 2) {
               const NL = String.fromCharCode(10);
               let md = '## ' + _compareKorNames.join(' vs ') + ' 기록 비교' + NL + NL;
