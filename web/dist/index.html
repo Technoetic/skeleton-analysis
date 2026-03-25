@@ -12084,23 +12084,28 @@ Generate a single SELECT SQL query:`;
 
     const upper = sql.toUpperCase();
 
-    // Force inject player names from question if missing
+    // Force inject player names: remove existing name filter, add OR for all mentioned players
     if (question) {
       const korNames = this._extractKoreanNames(question);
       if (korNames.length >= 2) {
         const resolved = korNames.map(n => this._korNameMap[n]).filter(Boolean);
         if (resolved.length >= 2) {
-          const hasAllNames = resolved.every(eng => upper.includes(eng.split(' ')[0].toUpperCase()));
-          if (!hasAllNames) {
-            const nameConditions = resolved.map(eng => "name ILIKE '" + eng.split(' ')[0] + "%'").join(' OR ');
-            if (upper.includes('WHERE')) {
-              sql = sql.replace(/WHERE\s+/i, 'WHERE (' + nameConditions + ') AND ');
-            } else {
-              const insertPt = sql.search(/\s+(ORDER|LIMIT|GROUP)\s+/i);
-              if (insertPt > 0) sql = sql.slice(0, insertPt) + ' WHERE (' + nameConditions + ')' + sql.slice(insertPt);
-              else sql = sql + ' WHERE (' + nameConditions + ')';
-            }
+          // Remove existing name ILIKE conditions
+          sql = sql.replace(/AND\s+name\s+ILIKE\s+'[^']*'/gi, '');
+          sql = sql.replace(/name\s+ILIKE\s+'[^']*'\s+AND/gi, '');
+          sql = sql.replace(/name\s+ILIKE\s+'[^']*'/gi, '');
+          sql = sql.replace(/name\s*=\s*'[^']*'/gi, '');
+          // Build OR condition for all players
+          const nameConditions = resolved.map(eng => "name ILIKE '" + eng.split(' ')[0] + "%'").join(' OR ');
+          if (/WHERE/i.test(sql)) {
+            sql = sql.replace(/WHERE\s+/i, 'WHERE (' + nameConditions + ') AND ');
+          } else {
+            const insertPt = sql.search(/\s+(ORDER|LIMIT|GROUP)\s+/i);
+            if (insertPt > 0) sql = sql.slice(0, insertPt) + ' WHERE (' + nameConditions + ')' + sql.slice(insertPt);
+            else sql = sql + ' WHERE (' + nameConditions + ')';
           }
+          // Ensure LIMIT is at least 200
+          sql = sql.replace(/LIMIT\s+\d+/i, 'LIMIT 200');
         }
       }
     }
