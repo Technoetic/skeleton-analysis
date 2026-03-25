@@ -1940,7 +1940,7 @@ button.secondary-btn:active {
 .chatbot-msg.user { justify-content: flex-end; }
 .chatbot-msg.bot { justify-content: flex-start; }
 .chatbot-bubble {
-  max-width: 85%; padding: 8px 12px; border-radius: 12px;
+  max-width: 100%; padding: 8px 12px; border-radius: 12px;
   font-size: 0.82rem; line-height: 1.5; word-break: break-word;
   overflow-x: auto;
 }
@@ -1950,15 +1950,9 @@ button.secondary-btn:active {
 .chatbot-bubble.bot {
   background: rgba(255,255,255,0.08); color: #e0e8f0; border-bottom-left-radius: 4px;
 }
-<<<<<<< HEAD
-.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.75em; display: block; overflow-x: auto; white-space: nowrap; background: #141b2d !important; border-radius: 6px; }
-.md-table th { background: #1e3a5f !important; color: #e2e8f0 !important; padding: 5px 8px; text-align: left; border-bottom: 2px solid #1e3a5f; white-space: nowrap !important; font-size: 0.85em; }
-.md-table td { padding: 5px 8px; border-bottom: 1px solid #1e3a5f; color: #94a3b8 !important; background: #141b2d !important; white-space: nowrap !important; }
-=======
-.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.85em; background: transparent; }
-.md-table th { background: rgba(59,130,246,0.25); color: #bee3ff; padding: 6px 10px; text-align: left; border-bottom: 2px solid #1e3a5f; }
-.md-table td { padding: 5px 10px; border-bottom: 1px solid #1e3a5f; color: #ffffff; }
->>>>>>> 9dd37d32e127a72efc109ada3842039dca4aafa3
+.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.75em; table-layout: fixed; overflow: hidden; background: #141b2d !important; border-radius: 6px; }
+.md-table th { background: #1e3a5f !important; color: #e2e8f0 !important; padding: 5px 8px; text-align: left; border-bottom: 2px solid #1e3a5f; white-space: normal; font-size: 0.85em; }
+.md-table td { padding: 5px 8px; border-bottom: 1px solid #1e3a5f; color: #94a3b8 !important; background: #141b2d !important; white-space: normal; }
 .md-table tr:hover td { background: rgba(59,130,246,0.1) !important; }
 .chatbot-bubble h3, .chatbot-bubble h4 { margin: 8px 0 4px; }
 .chatbot-bubble blockquote { border-left: 3px solid #3b82f6; padding: 4px 10px; margin: 6px 0; color: #94a3b8; }
