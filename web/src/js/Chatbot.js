@@ -300,7 +300,11 @@ RULES:
       if (tableRows.length < 2) { out.push(...tableRows); tableRows = []; inTable = false; return; }
       let t = '<table class="md-table"><thead><tr>';
       const hdrCells = tableRows[0].split('|').map(c => c.trim()).filter(c => c);
-      hdrCells.forEach(c => { t += '<th>' + c + '</th>'; });
+      hdrCells.forEach(c => {
+        // Shorten common headers
+        let sc = c.replace('평균 기록', '평균').replace('최고 기록', '최고').replace('최저 기록', '최저').replace('경기 수', '경기').replace('평균 완주 시간', '평균').replace('최고 완주 시간', '최고').replace('최저 완주 시간', '최저').replace('선수 이름', '선수');
+        t += '<th>' + sc + '</th>';
+      });
       t += '</tr></thead><tbody>';
       for (let r = 1; r < tableRows.length; r++) {
         if (/^[\s|:-]+$/.test(tableRows[r])) continue;

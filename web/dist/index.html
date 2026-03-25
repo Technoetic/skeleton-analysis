@@ -1951,7 +1951,7 @@ button.secondary-btn:active {
   background: rgba(255,255,255,0.08); color: #e0e8f0; border-bottom-left-radius: 4px;
 }
 <<<<<<< HEAD
-.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.8em; display: block; overflow-x: auto; white-space: nowrap; background: #141b2d !important; border-radius: 6px; }
+.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.75em; display: block; overflow-x: auto; white-space: nowrap; background: #141b2d !important; border-radius: 6px; }
 .md-table th { background: rgba(59,130,246,0.25) !important; color: #93c5fd !important; padding: 5px 8px; text-align: left; border-bottom: 2px solid #1e3a5f; white-space: nowrap !important; font-size: 0.85em; }
 .md-table td { padding: 5px 8px; border-bottom: 1px solid #1e3a5f; color: #e2e8f0 !important; background: #141b2d !important; white-space: nowrap !important; }
 =======
@@ -9723,7 +9723,11 @@ RULES:
       if (tableRows.length < 2) { out.push(...tableRows); tableRows = []; inTable = false; return; }
       let t = '<table class="md-table"><thead><tr>';
       const hdrCells = tableRows[0].split('|').map(c => c.trim()).filter(c => c);
-      hdrCells.forEach(c => { t += '<th>' + c + '</th>'; });
+      hdrCells.forEach(c => {
+        // Shorten common headers
+        let sc = c.replace('평균 기록', '평균').replace('최고 기록', '최고').replace('최저 기록', '최저').replace('경기 수', '경기').replace('평균 완주 시간', '평균').replace('최고 완주 시간', '최고').replace('최저 완주 시간', '최저').replace('선수 이름', '선수');
+        t += '<th>' + sc + '</th>';
+      });
       t += '</tr></thead><tbody>';
       for (let r = 1; r < tableRows.length; r++) {
         if (/^[\s|:-]+$/.test(tableRows[r])) continue;
