@@ -14,6 +14,7 @@ import xgboost as xgb
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
+from catboost import CatBoostRegressor
 
 # =============================================================
 # 설정
@@ -37,13 +38,16 @@ TABLES = [
     'track_metadata',
 ]
 
-# 루지 정예 멤버 11명
+# 루지 레이디스타트 제외 선수
+LUGE_DROP_NAMES = ['배하영', '배재성', 'BAE Hayoung', 'BAE Jaeseong']
+
+# 루지 정예 멤버 (레이디스타트 기준, 영문+한글)
 LUGE_ELITE_NAMES = [
     'KIM Jimin', 'OH Jeongim', 'PARK Jiye', 'KIM Kyeongrok',
-    'PARK Jiwan', 'BAE Jaeseong', 'KIM Soyun', 'YOO Jihun',
-    'JUNG Hyeseon', 'SHIN Yubin', 'KIM Bogeun',
+    'PARK Jiwan', 'KIM Soyun', 'YOO Jihun',
+    'JUNG Hyeseon', 'SHIN Yubin', 'KIM Bogeun', 'PARK Seohyeon',
     '김지민', '오정임', '박지예', '김경록', '박지완',
-    '배재성', '김소윤', '유지훈', '정혜선', '신유빈', '김보근'
+    '김소윤', '유지훈', '정혜선', '신유빈', '김보근', '박서현'
 ]
 
 # 봅슬레이 제외 선수
@@ -287,25 +291,87 @@ def assign_luge_start_location(st):
 
 def preprocess_luge(df_luge, df_ath_luge):
     """
-    루지 전처리
-    - 정예 멤버 11명만 선택
-    - 스타트 구간 파생변수 (Start_Location) 생성
-    - 성별(gender) 컬럼 정규화
+    루지 전처리 (v2 - 레이디스타트 정밀 전처리)
+    1. 레이디스타트만 (start_time 4.0~5.0초)
+    2. 배하영/배재성 제거 (편차 과대 + 데이터 부족)
+    3. finish 47~54초 (정상 주행 범위)
+    4. speed >= 100km/h (브레이크 주행 제거)
+    5. int1~int4 구간 기록 전부 유효
+    6. 선수별 start 최고+0.3초 초과 제거
     """
-    # 정예 멤버 필터링
-    df_elite = df_luge[df_luge['name'].isin(LUGE_ELITE_NAMES)].copy()
-    print(f'[루지] 정예 멤버 필터링: {len(df_luge)}건 → {len(df_elite)}건')
+    df = df_luge.copy()
+    print(f'[루지] 원시 데이터: {len(df)}건')
 
-    df = apply_common_preprocessing(df_elite, df_ath_luge, '루지', use_physical=True)
+    # Lady Start만 (4.0~5.0초, 브레이크 5초+ 제거)
+    df['start_time'] = pd.to_numeric(df['start_time'], errors='coerce')
+    df['finish'] = pd.to_numeric(df['finish'], errors='coerce')
+    for c in ['int1', 'int2', 'int3', 'int4', 'speed']:
+        df[c] = pd.to_numeric(df[c], errors='coerce')
+    df = df[(df['start_time'] >= 4.0) & (df['start_time'] <= 5.0)]
+    print(f'[루지] Lady Start (4.0~5.0초): {len(df)}건')
 
-    # 스타트 구간 파생변수
-    df['Start_Location'] = df['start_time'].apply(assign_luge_start_location)
-    df = df[df['Start_Location'] != 'Drop']
+    # is_normal 필터
+    df['is_normal'] = df['is_normal'].astype(str).str.lower()
+    df = df[df['is_normal'].isin(['true', '1', '1.0'])].copy()
+    df = df.dropna(subset=['finish'])
+    print(f'[루지] is_normal + finish 유효: {len(df)}건')
+
+    # 제외 선수 삭제
+    df = df[~df['name'].isin(LUGE_DROP_NAMES)]
+    print(f'[루지] 배하영/배재성 제거: {len(df)}건')
+
+    # finish 47~54초
+    df = df[(df['finish'] >= 47) & (df['finish'] <= 54)]
+    print(f'[루지] finish 47~54초: {len(df)}건')
+
+    # speed >= 100km/h (브레이크 주행 제거)
+    df = df[(df['speed'].isna()) | (df['speed'] >= 100)]
+    print(f'[루지] speed >= 100km/h: {len(df)}건')
+
+    # int1~int4 구간 기록 전부 유효
+    df = df.dropna(subset=['int1', 'int2', 'int3', 'int4'])
+    print(f'[루지] int1~int4 유효: {len(df)}건')
+
+    # 신체 데이터 병합
+    df = pd.merge(df, df_ath_luge[['athlete_id', 'height_cm', 'weight_kg']],
+                  on='athlete_id', how='left', suffixes=('', '_ath'))
+    for c in ['height_cm', 'weight_kg']:
+        if c + '_ath' in df.columns:
+            df[c] = df[c].fillna(df[c + '_ath'])
+        df[c] = pd.to_numeric(df[c], errors='coerce')
+    df = df.dropna(subset=['height_cm', 'weight_kg'])
+
+    # 기상 변수
+    for c in ['air_temp', 'pressure_hpa', 'dewpoint_c']:
+        df[c] = pd.to_numeric(df[c], errors='coerce')
+    df = df.dropna(subset=['air_temp', 'pressure_hpa', 'dewpoint_c'])
+
+    # 파생 변수
+    df['Air_Density'] = (df['pressure_hpa'] * 100) / (287.05 * (df['air_temp'] + 273.15))
+    df['BMI'] = df['weight_kg'] / ((df['height_cm'] / 100) ** 2)
+    df['is_female'] = (df['gender'] == 'W').astype(int)
+
+    # 선수별 start 최고+0.3초 초과 제거
+    best_start = df.groupby('name')['start_time'].min()
+    df = df[df.apply(lambda r: r['start_time'] <= best_start[r['name']] + 0.3, axis=1)]
+    print(f'[루지] start +0.3초 필터: {len(df)}건')
+
+    # 빙면 온도 (ice_zone_temps.json)
+    ice_zone_path = os.path.join(SAVE_DIR, 'ice_zone_temps.json')
+    if os.path.exists(ice_zone_path):
+        with open(ice_zone_path) as f:
+            zt = json.load(f)
+        for z in ['ice_zone1', 'ice_zone2', 'ice_zone3', 'ice_zone4', 'ice_zone5']:
+            df[z] = df['date'].map({d: v.get(z) for d, v in zt.items()})
+            df.loc[df[z].isna(), z] = pd.to_numeric(
+                df.loc[df[z].isna(), 'temp_avg'], errors='coerce')
 
     # 성별 정규화
     df['gender'] = df['gender'].astype(str).str.strip().str.upper()
+    df['Start_Location'] = 'Lady Start'
 
-    print(f'[루지] 스타트 구간 분포:\n{df["Start_Location"].value_counts().to_string()}')
+    print(f'[루지] 최종: {len(df)}건, {df["name"].nunique()}명')
+    print(f'[루지] 남자: {len(df[df["gender"]=="M"])} / 여자: {len(df[df["gender"]=="W"])}')
     return df
 
 
@@ -473,57 +539,52 @@ def main():
     train_mlr(df_bob_clean, '봅슬레이', bob_features)
 
     # ----------------------------------------------------------
-    # 5. 루지 모델 학습 (전체 통합)
+    # 5. 루지 모델 학습 (레이디스타트 합산 - CatBoost)
     # ----------------------------------------------------------
     print('\n' + '=' * 50)
-    print('루지 모델 학습 (통합)')
+    print('루지 레이디스타트 모델 학습 (v2 - CatBoost)')
     print('=' * 50)
 
-    luge_features = ['start_time', 'height_cm', 'weight_kg', 'air_temp', 'Air_Density', 'dewpoint_c']
+    luge_features = ['start_time', 'height_cm', 'weight_kg', 'BMI',
+                     'air_temp', 'Air_Density', 'dewpoint_c',
+                     'ice_zone1', 'ice_zone2', 'ice_zone3', 'ice_zone4', 'ice_zone5',
+                     'is_female']
 
+    # XGBoost 모델 (호환성)
     train_xgboost(
         df_luge_clean,
         sport_name='luge',
         feature_cols=luge_features,
-        cat_cols=['athlete_id', 'Start_Location'],
+        cat_cols=['athlete_id'],
         model_filename='luge_xgboost_model.pkl'
     )
 
-    # ----------------------------------------------------------
-    # 6. 루지 성별 분리 모델 (레이디 스타트 구간)
-    # ----------------------------------------------------------
-    print('\n' + '=' * 50)
-    print('루지 레이디 스타트 - 성별 분리 모델')
-    print('=' * 50)
+    # CatBoost 모델 (최고 성능)
+    df_luge_enc = pd.get_dummies(df_luge_clean, columns=['athlete_id'], drop_first=True)
+    ohe_luge = [c for c in df_luge_enc.columns if 'athlete_id_' in c]
+    luge_all_f = luge_features + ohe_luge
+    luge_all_f = [f for f in luge_all_f if f in df_luge_enc.columns]
+    X_luge = df_luge_enc[luge_all_f].astype(float)
+    y_luge = df_luge_enc['finish'].astype(float)
+    valid_luge = X_luge.notna().all(axis=1)
+    X_luge, y_luge = X_luge[valid_luge], y_luge[valid_luge]
 
-    df_lady = df_luge_clean[df_luge_clean['Start_Location'] == 'Lady Start'].copy()
+    if len(X_luge) >= 10:
+        X_luge_tr, X_luge_te, y_luge_tr, y_luge_te = train_test_split(
+            X_luge, y_luge, test_size=0.2, random_state=42)
+        cb_model = CatBoostRegressor(
+            depth=5, learning_rate=0.05, iterations=500, random_seed=42, verbose=0)
+        cb_model.fit(X_luge_tr, y_luge_tr)
+        cb_pred = cb_model.predict(X_luge_te)
+        cb_r2 = r2_score(y_luge_te, cb_pred)
+        cb_rmse = np.sqrt(mean_squared_error(y_luge_te, cb_pred))
+        print(f'\n[루지 CatBoost] R²: {cb_r2 * 100:.2f}%, RMSE: {cb_rmse:.4f}초')
 
-    # 특성 공학: 물리적 파생변수 추가
-    df_lady['Power_Index'] = df_lady['weight_kg'] / df_lady['start_time']
-    df_lady['Env_Stress']  = df_lady['Air_Density'] * df_lady['air_temp']
+        cb_save = os.path.join(SAVE_DIR, 'luge_catboost_model.pkl')
+        joblib.dump(cb_model, cb_save)
+        print(f'  모델 저장: {cb_save}')
 
-    lady_features_ext = luge_features + ['Power_Index', 'Env_Stress']
-
-    df_lady_male   = df_lady[df_lady['gender'] == 'M'].copy()
-    df_lady_female = df_lady[df_lady['gender'] == 'W'].copy()
-
-    print(f'  남자(M): {len(df_lady_male)}건 / 여자(W): {len(df_lady_female)}건')
-
-    train_xgboost(
-        df_lady_male,
-        sport_name='luge_lady_male',
-        feature_cols=lady_features_ext,
-        cat_cols=['athlete_id'],
-        model_filename='luge_lady_male_xgboost.pkl'
-    )
-    train_xgboost(
-        df_lady_female,
-        sport_name='luge_lady_female',
-        feature_cols=lady_features_ext,
-        cat_cols=['athlete_id'],
-        model_filename='luge_lady_female_xgboost.pkl'
-    )
-    train_mlr(df_lady_female, '루지 레이디(여)', lady_features_ext)
+    train_mlr(df_luge_clean, '루지 레이디스타트', luge_features)
 
     # ----------------------------------------------------------
     # 완료
@@ -536,8 +597,7 @@ def main():
         'skeleton_xgboost_model.pkl',
         'bobsled_xgboost_model.pkl',
         'luge_xgboost_model.pkl',
-        'luge_lady_male_xgboost.pkl',
-        'luge_lady_female_xgboost.pkl',
+        'luge_catboost_model.pkl',
     ]:
         path = os.path.join(SAVE_DIR, fname)
         status = '존재' if os.path.exists(path) else '없음'
