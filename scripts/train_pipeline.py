@@ -342,8 +342,8 @@ def preprocess_luge(df_luge, df_ath_luge):
     df = df.dropna(subset=['height_cm', 'weight_kg'])
 
     # 기상 변수
-    for c in ['air_temp', 'pressure_hpa', 'dewpoint_c']:
-        df[c] = pd.to_numeric(df[c], errors='coerce')
+    for c in ['air_temp', 'pressure_hpa', 'dewpoint_c', 'humidity_pct', 'wind_speed_ms', 'temp_avg']:
+        df[c] = pd.to_numeric(df.get(c, pd.Series(dtype=float)), errors='coerce')
     df = df.dropna(subset=['air_temp', 'pressure_hpa', 'dewpoint_c'])
 
     # 파생 변수
@@ -356,15 +356,22 @@ def preprocess_luge(df_luge, df_ath_luge):
     df = df[df.apply(lambda r: r['start_time'] <= best_start[r['name']] + 0.3, axis=1)]
     print(f'[루지] start +0.3초 필터: {len(df)}건')
 
-    # 빙면 온도 (ice_zone_temps.json)
+    # 빙면 온도 (ice_zone_temps.json 또는 temp_avg fallback)
     ice_zone_path = os.path.join(SAVE_DIR, 'ice_zone_temps.json')
+    has_ice_zones = False
     if os.path.exists(ice_zone_path):
         with open(ice_zone_path) as f:
             zt = json.load(f)
         for z in ['ice_zone1', 'ice_zone2', 'ice_zone3', 'ice_zone4', 'ice_zone5']:
-            df[z] = df['date'].map({d: v.get(z) for d, v in zt.items()})
-            df.loc[df[z].isna(), z] = pd.to_numeric(
-                df.loc[df[z].isna(), 'temp_avg'], errors='coerce')
+            df[z] = df['date'].astype(str).map({d: v.get(z) for d, v in zt.items()})
+            df[z] = pd.to_numeric(df[z], errors='coerce')
+            df.loc[df[z].isna(), z] = df.loc[df[z].isna(), 'temp_avg']
+        if df['ice_zone1'].notna().sum() > len(df) * 0.5:
+            has_ice_zones = True
+
+    if not has_ice_zones:
+        for z in ['ice_zone1', 'ice_zone2', 'ice_zone3', 'ice_zone4', 'ice_zone5']:
+            df[z] = df['temp_avg']
 
     # 성별 정규화
     df['gender'] = df['gender'].astype(str).str.strip().str.upper()
@@ -539,32 +546,56 @@ def main():
     train_mlr(df_bob_clean, '봅슬레이', bob_features)
 
     # ----------------------------------------------------------
-    # 5. 루지 모델 학습 (레이디스타트 합산 - CatBoost)
+    # 5. 루지 모델 학습 (v3 - 파생변수 + Stacking Ensemble)
     # ----------------------------------------------------------
     print('\n' + '=' * 50)
-    print('루지 레이디스타트 모델 학습 (v2 - CatBoost)')
+    print('루지 레이디스타트 모델 학습 (v3 - Stacking Ensemble)')
     print('=' * 50)
 
     luge_features = ['start_time', 'height_cm', 'weight_kg', 'BMI',
-                     'air_temp', 'Air_Density', 'dewpoint_c',
+                     'air_temp', 'Air_Density', 'dewpoint_c', 'temp_avg',
                      'ice_zone1', 'ice_zone2', 'ice_zone3', 'ice_zone4', 'ice_zone5',
                      'is_female']
 
-    # XGBoost 모델 (호환성)
+    # 추가 기상변수 (있으면)
+    if 'humidity_pct' in df_luge_clean.columns and df_luge_clean['humidity_pct'].notna().sum() > len(df_luge_clean) * 0.5:
+        luge_features.append('humidity_pct')
+    if 'wind_speed_ms' in df_luge_clean.columns and df_luge_clean['wind_speed_ms'].notna().sum() > len(df_luge_clean) * 0.5:
+        luge_features.append('wind_speed_ms')
+
+    # 파생변수 생성
+    df_luge_fe = df_luge_clean.copy()
+    df_luge_fe['temp_avg'] = pd.to_numeric(df_luge_fe.get('temp_avg', pd.Series(dtype=float)), errors='coerce')
+    df_luge_fe['dew_minus_ice'] = df_luge_fe['dewpoint_c'] - df_luge_fe['temp_avg']
+    df_luge_fe['frost_risk'] = (df_luge_fe['dew_minus_ice'] > 0).astype(int)
+    df_luge_fe['ice_mean'] = df_luge_fe['temp_avg']
+    df_luge_fe['start_x_weight'] = df_luge_fe['start_time'] * df_luge_fe['weight_kg']
+    df_luge_fe['start_x_density'] = df_luge_fe['start_time'] * df_luge_fe['Air_Density']
+    df_luge_fe['weight_x_density'] = df_luge_fe['weight_kg'] * df_luge_fe['Air_Density']
+    df_luge_fe['dew_x_ice_mean'] = df_luge_fe['dewpoint_c'] * df_luge_fe['ice_mean']
+    df_luge_fe['start_time_sq'] = df_luge_fe['start_time'] ** 2
+    df_luge_fe['dewpoint_sq'] = df_luge_fe['dewpoint_c'] ** 2
+
+    derived_features = ['dew_minus_ice', 'frost_risk', 'ice_mean',
+                        'start_x_weight', 'start_x_density', 'weight_x_density',
+                        'dew_x_ice_mean', 'start_time_sq', 'dewpoint_sq']
+    luge_all_features = luge_features + derived_features
+
+    # XGBoost 모델 (호환성 - 기존 피처)
     train_xgboost(
         df_luge_clean,
         sport_name='luge',
-        feature_cols=luge_features,
+        feature_cols=[f for f in luge_features if f in df_luge_clean.columns],
         cat_cols=['athlete_id'],
         model_filename='luge_xgboost_model.pkl'
     )
 
-    # CatBoost 모델 (최고 성능)
-    df_luge_enc = pd.get_dummies(df_luge_clean, columns=['athlete_id'], drop_first=True)
+    # Stacking Ensemble (XGBoost + CatBoost → Ridge)
+    df_luge_enc = pd.get_dummies(df_luge_fe, columns=['athlete_id'], drop_first=True)
     ohe_luge = [c for c in df_luge_enc.columns if 'athlete_id_' in c]
-    luge_all_f = luge_features + ohe_luge
-    luge_all_f = [f for f in luge_all_f if f in df_luge_enc.columns]
-    X_luge = df_luge_enc[luge_all_f].astype(float)
+    luge_stack_f = luge_all_features + ohe_luge
+    luge_stack_f = [f for f in luge_stack_f if f in df_luge_enc.columns]
+    X_luge = df_luge_enc[luge_stack_f].astype(float)
     y_luge = df_luge_enc['finish'].astype(float)
     valid_luge = X_luge.notna().all(axis=1)
     X_luge, y_luge = X_luge[valid_luge], y_luge[valid_luge]
@@ -572,19 +603,45 @@ def main():
     if len(X_luge) >= 10:
         X_luge_tr, X_luge_te, y_luge_tr, y_luge_te = train_test_split(
             X_luge, y_luge, test_size=0.2, random_state=42)
-        cb_model = CatBoostRegressor(
-            depth=5, learning_rate=0.05, iterations=500, random_seed=42, verbose=0)
-        cb_model.fit(X_luge_tr, y_luge_tr)
-        cb_pred = cb_model.predict(X_luge_te)
-        cb_r2 = r2_score(y_luge_te, cb_pred)
-        cb_rmse = np.sqrt(mean_squared_error(y_luge_te, cb_pred))
-        print(f'\n[루지 CatBoost] R²: {cb_r2 * 100:.2f}%, RMSE: {cb_rmse:.4f}초')
 
-        cb_save = os.path.join(SAVE_DIR, 'luge_catboost_model.pkl')
-        joblib.dump(cb_model, cb_save)
-        print(f'  모델 저장: {cb_save}')
+        # Model 1: XGBoost (tuned)
+        from xgboost import XGBRegressor as _XGB
+        xgb_luge = _XGB(max_depth=4, learning_rate=0.05, n_estimators=200,
+                         subsample=0.8, colsample_bytree=0.8, random_state=42)
+        xgb_luge.fit(X_luge_tr, y_luge_tr)
+        xgb_pred_tr = xgb_luge.predict(X_luge_tr)
+        xgb_pred_te = xgb_luge.predict(X_luge_te)
+        xgb_r2 = r2_score(y_luge_te, xgb_pred_te)
+        print(f'\n[루지 XGBoost v3] R²: {xgb_r2 * 100:.2f}%')
 
-    train_mlr(df_luge_clean, '루지 레이디스타트', luge_features)
+        # Model 2: CatBoost (tuned)
+        cb_luge = CatBoostRegressor(
+            depth=5, learning_rate=0.03, iterations=1000, random_seed=42, verbose=0)
+        cb_luge.fit(X_luge_tr, y_luge_tr)
+        cb_pred_tr = cb_luge.predict(X_luge_tr)
+        cb_pred_te = cb_luge.predict(X_luge_te)
+        cb_r2 = r2_score(y_luge_te, cb_pred_te)
+        print(f'[루지 CatBoost v3] R²: {cb_r2 * 100:.2f}%')
+
+        # Stacking: Ridge meta-model
+        from sklearn.linear_model import Ridge as _Ridge
+        meta_X_tr = np.column_stack([xgb_pred_tr, cb_pred_tr])
+        meta_X_te = np.column_stack([xgb_pred_te, cb_pred_te])
+        meta_model = _Ridge(alpha=1.0)
+        meta_model.fit(meta_X_tr, y_luge_tr)
+        stack_pred = meta_model.predict(meta_X_te)
+        stack_r2 = r2_score(y_luge_te, stack_pred)
+        stack_rmse = np.sqrt(mean_squared_error(y_luge_te, stack_pred))
+        print(f'[루지 Stacking (XGB+CB→Ridge)] R²: {stack_r2 * 100:.2f}%, RMSE: {stack_rmse:.4f}초')
+
+        # 모델 저장
+        joblib.dump(xgb_luge, os.path.join(SAVE_DIR, 'luge_xgboost_v3.pkl'))
+        joblib.dump(cb_luge, os.path.join(SAVE_DIR, 'luge_catboost_v3.pkl'))
+        joblib.dump(meta_model, os.path.join(SAVE_DIR, 'luge_stacking_meta.pkl'))
+        joblib.dump(cb_luge, os.path.join(SAVE_DIR, 'luge_catboost_model.pkl'))  # 호환성
+        print(f'  모델 저장 완료 (xgb_v3, catboost_v3, stacking_meta)')
+
+    train_mlr(df_luge_fe, '루지 레이디스타트', [f for f in luge_all_features if f in df_luge_fe.columns])
 
     # ----------------------------------------------------------
     # 완료
