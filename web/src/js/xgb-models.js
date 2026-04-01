@@ -5,13 +5,11 @@ function xgbPredict(m, x) {
   let sum = m.bs || 0;
   for (const tree of m.t) {
     let i = 0;
-    while (tree[i][2] !== 0 || tree[i][3] === 0) {
-      const [f, t, r, l] = tree[i];
-      if (r === 0 && l !== 0) { sum += l; break; }
-      i = (x[f] < t) ? i + 1 : r;
-      if (i >= tree.length) { break; }
+    while (i < tree.length) {
+      const [f, thr, r, l] = tree[i];
+      if (r === 0) { sum += l; break; }  // 리프 노드
+      i = (x[f] < thr) ? i + 1 : r;
     }
-    if (tree[i] && tree[i][2] === 0) sum += tree[i][3];
   }
   return sum;
 }
