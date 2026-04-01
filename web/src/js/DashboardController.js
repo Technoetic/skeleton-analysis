@@ -505,20 +505,18 @@ class DashboardController {
       </div>
     `;
 
-    // 분포 차트
-    const finishes = okRecords.map(r => parseFloat(r.finish)).filter(v => v > 0 && v < 65);
-    this.#renderDistChart(finishes, predicted);
-
-    // 코칭 팁
+    // 코칭 팁 & 필터 상태 (동기)
     if (coachEl) coachEl.innerHTML = this.#generateTips(inp, predicted, mlrResult);
-
-    // 필터 상태 업데이트
     this.#updateFilterStatus(okRecords);
 
-    // countUp 애니메이션
-    if (typeof UIController !== 'undefined' && UIController.animateCountUp) {
-      UIController.animateCountUp(resultEl);
-    }
+    // 분포 차트 & 애니메이션 비동기 (Chart.js RAF 블로킹 방지)
+    const finishes = okRecords.map(r => parseFloat(r.finish)).filter(v => v > 0 && v < 65);
+    setTimeout(() => {
+      this.#renderDistChart(finishes, predicted);
+      if (typeof UIController !== 'undefined' && UIController.animateCountUp) {
+        UIController.animateCountUp(resultEl);
+      }
+    }, 0);
   }
 
   #renderDistChart(finishes, predicted) {
