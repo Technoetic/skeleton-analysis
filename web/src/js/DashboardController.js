@@ -37,7 +37,7 @@ class DashboardController {
 
   #bindEvents() {
     const btn = this.#el('dash-predict-btn');
-    if (btn) btn.addEventListener('click', () => this.#runPrediction());
+    if (btn) btn.addEventListener('click', () => setTimeout(() => this.#runPrediction(), 0));
 
     const player = this.#el('dash-player');
     if (player) player.addEventListener('change', () => this.#onPlayerChange());
