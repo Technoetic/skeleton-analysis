@@ -37,7 +37,7 @@ class DashboardController {
 
   #bindEvents() {
     const btn = this.#el('dash-predict-btn');
-    if (btn) btn.addEventListener('click', () => setTimeout(() => this.#runPrediction(), 0));
+    if (btn) btn.addEventListener('click', () => this.#runPrediction());
 
     const player = this.#el('dash-player');
     if (player) player.addEventListener('change', () => this.#onPlayerChange());
@@ -362,7 +362,8 @@ class DashboardController {
     };
   }
 
-  #runPrediction() {
+  async #runPrediction() {
+    const _yield = () => new Promise(r => setTimeout(r, 0));
     const inp = this.#getInputs();
     const resultEl = this.#el('dash-prediction-result');
     const coachEl = this.#el('dash-coaching-tips');
@@ -387,6 +388,7 @@ class DashboardController {
       return;
     }
 
+    await _yield();
     // XGBoost 출발 전 예측 (종목별 모델 선택)
     let xgbPredicted = null;
     let xgbModel = null;
@@ -424,6 +426,7 @@ class DashboardController {
       xgbModel = preModel;
     }
 
+    await _yield();
     // MLR 예측 (Poly3+Ridge if available, fallback to classic MLR)
     let mlrPredicted = null;
     let mlrR2 = 0;
@@ -494,6 +497,7 @@ class DashboardController {
       </div>`;
     };
 
+    await _yield();
     // 결과 렌더링
     resultEl.innerHTML = `
       <div class="dash-big-number">
@@ -509,14 +513,14 @@ class DashboardController {
     if (coachEl) coachEl.innerHTML = this.#generateTips(inp, predicted, mlrResult);
     this.#updateFilterStatus(okRecords);
 
-    // 분포 차트 & 애니메이션 비동기 (Chart.js RAF 블로킹 방지)
+    // 분포 차트 & 애니메이션 (비동기)
     const finishes = okRecords.map(r => parseFloat(r.finish)).filter(v => v > 0 && v < 65);
-    setTimeout(() => {
-      this.#renderDistChart(finishes, predicted);
-      if (typeof UIController !== 'undefined' && UIController.animateCountUp) {
-        UIController.animateCountUp(resultEl);
-      }
-    }, 0);
+    await _yield();
+    this.#renderDistChart(finishes, predicted);
+    await _yield();
+    if (typeof UIController !== 'undefined' && UIController.animateCountUp) {
+      UIController.animateCountUp(resultEl);
+    }
   }
 
   #renderDistChart(finishes, predicted) {
