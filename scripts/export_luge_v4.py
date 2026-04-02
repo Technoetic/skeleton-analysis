@@ -17,7 +17,7 @@ BASE_DIR = r'C:\Users\Admin\Desktop\박사논문\예측모델'
 SAVE_DIR = r'C:\Users\Admin\Desktop\새 폴더'
 WEB_JS = os.path.join(BASE_DIR, 'web', 'src', 'js')
 
-LUGE_DROP_NAMES = ['배하영', '배재성', 'BAE Hayoung', 'BAE Jaeseong']
+LUGE_DROP_NAMES = ['배하영', 'BAE Hayoung']  # 배재성은 v5부터 포함
 
 # ============================================================
 # 1. 데이터 로드 + 전처리 (v4: 국제대회 포함 + 결측 대체)
@@ -248,7 +248,7 @@ meta = {
             'max_depth': 4, 'learning_rate': 0.05,
             'n_estimators': 200, 'subsample': 0.8
         },
-        'dataNote': '국제대회 여자 싱글 포함 (WC/NC/OWG 2017-2025)',
+        'dataNote': '국제대회 여자 싱글 + cleaned 보강 + 배재성 포함 (v5)',
     }
 }
 
@@ -264,7 +264,7 @@ if os.path.exists(xgb_models_path):
         js_content = f.read()
 
     start_marker = 'const XGB_MODELS='
-    end_marker = ';\n\nfunction xgbPredict'
+    end_marker = '};\nfunction xgbPredict'
 
     start_idx = js_content.find(start_marker)
     end_idx = js_content.find(end_marker)

@@ -39,7 +39,7 @@ TABLES = [
 ]
 
 # 루지 레이디스타트 제외 선수
-LUGE_DROP_NAMES = ['배하영', '배재성', 'BAE Hayoung', 'BAE Jaeseong']
+LUGE_DROP_NAMES = ['배하영', 'BAE Hayoung']  # 배재성은 v5부터 포함
 
 # 루지 정예 멤버 (레이디스타트 기준, 영문+한글)
 LUGE_ELITE_NAMES = [
