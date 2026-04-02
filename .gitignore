@@ -22,4 +22,8 @@ web/UsersAdminDesktoppredwebscreenshots/
 web/screenshots/
 web/tests/
 
+*.hwp
+proposal_full.txt
+proposal_text.txt
+
 .env

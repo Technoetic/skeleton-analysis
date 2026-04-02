@@ -1,0 +1,113 @@
+﻿id,athlete_id,name,nat,birth_year,gender,height_cm,weight_kg,name_kr,matched_2425
+12,ATH-2B73007E,이기표,KOR,,M,175,73,,False
+14,ATH-EF316CA9,박건이,KOR,,M,170,74,,False
+15,ATH-C3700BB7,윤영현,KOR,,M,173,78,,False
+16,ATH-21A1653D,김정민,KOR,,M,178,73,,False
+17,ATH-6718EF80,허현민,KOR,,M,180,85,,False
+19,ATH-1DB5247E,이윤하,KOR,,W,162,58,,False
+20,ATH-0AE848B0,김예람,KOR,,M,174,63,,False
+21,ATH-7905C571,주라온,KOR,,M,171,75,,False
+1,ATH-63039871,김지민,KOR,,M,172,78,,True
+2,ATH-35800441,신유빈,KOR,,W,160,60,,True
+3,ATH-F4A71C5A,박지예,KOR,,W,170,71,,True
+4,ATH-7766F9DA,박지완,KOR,,M,172,68,,True
+5,ATH-89AEC532,오정임,KOR,,W,178,66,,True
+6,ATH-EBDFDBAD,유지훈,KOR,,M,176,94,,True
+7,ATH-75AE0AC6,김경록,KOR,,M,175,85,,True
+8,ATH-1682D7E7,배재성,KOR,,M,170,62,,True
+9,ATH-813A34B8,정혜선,KOR,,W,171,68,,True
+10,ATH-CFC8DAE8,김보근,KOR,,M,182,80,,True
+11,ATH-1ADC1B68,장에덴,KOR,,M,166,55,,True
+13,ATH-6C6AE107,배하영,KOR,,W,163,60,,True
+18,ATH-7697390A,고은새,KOR,,W,166,58,,True
+22,ATH-A1BAD889,박서현,KOR,,W,160,58,,True
+23,ATH-BE3DDC2D,"Jung, Hyesun",KOR,,W,,,,False
+24,ATH-B0699622,"Wang, Peixuan",CHN,,W,,,,False
+25,ATH-1EE3B2D7,"Shin, Yubin",KOR,,W,,,,False
+26,ATH-A16E036F,"Kim, Soyoon",KOR,,W,,,,False
+27,ATH-93640BC4,"Park, Jiye",KOR,,W,,,,False
+28,ATH-DE1B5F3F,"Hu, Huilan",CHN,,W,,,,False
+29,ATH-309EFFD0,"Prock, Hannah",AUT,,W,,,,False
+30,ATH-BE2076C8,"Zoeggeler, Nina",ITA,,W,,,,False
+31,ATH-0FEDDEC5,"Schwarz, Dorothea",AUT,,W,,,,False
+32,ATH-890EC6AA,"Kohala, Tove",SWE,,W,,,,False
+33,ATH-64A01F20,"Smaha, Olena",UKR,,W,,,,False
+34,ATH-B11B5C6E,"Desmond, Elsa",IRL,,W,,,,False
+35,ATH-91034274,"Ivanova, Tatyana",RUS,,W,,,,False
+36,ATH-16084A0A,"Geisenberger, Natalie",GER,,W,,,,False
+37,ATH-3730FE6E,Taubitz Julia,GER,,W,,,,False
+38,ATH-36341768,"Huefner, Tatjana",GER,,W,,,,False
+39,ATH-F90BDF83,"Platzer, Birgit",AUT,,W,,,,False
+40,ATH-062D5126,"McRae, Kimberley",CAN,,W,,,,False
+41,ATH-C54663F6,"Zirne, Ulla",LAT,,W,,,,False
+42,ATH-6DFD91FC,"Eitberger, Dajana",GER,,W,,,,False
+43,ATH-A19B2D57,"Kocher, Martina",SUI,,W,,,,False
+44,ATH-9EFFDF15,"Hamlin, Erin",USA,,W,,,,False
+45,ATH-2A2E41A8,"Cauce, Eliza",LAT,,W,,,,False
+46,ATH-EAF5DBAF,"Baturina, Ekaterina",RUS,,W,,,,False
+47,ATH-AB976591,"Britcher, Summer",USA,,W,,,,False
+48,ATH-D4FB02DC,"Gough, Alex",CAN,,W,,,,False
+49,ATH-E13815B0,"Stramaturaru, Raluca",ROU,,W,,,,False
+50,ATH-2A315420,"Egle, Madeleine",AUT,,W,,,,False
+51,ATH-05BB6D95,"Katnikova, Ekaterina",RUS,,W,,,,False
+52,ATH-85A669A1,"Kuls, Ewa",POL,,W,,,,False
+53,ATH-72C2AF1C,"Demchenko, Victoria",RUS,,W,,,,False
+54,ATH-2F54B22C,"Voetter, Andrea",ITA,,W,,,,False
+55,ATH-92DAEB90,"Sweeney, Emily",USA,,W,,,,False
+56,ATH-57122EC2,"Kastlunger, Miriam",AUT,,W,,,,False
+57,ATH-F6394A5D,"Apshkrum, Brooke",CAN,,W,,,,False
+58,ATH-14D1BF57,"Aparjode, Kendija",LAT,,W,,,,False
+59,ATH-C2BA88DB,"Mikhaylenko, Olesya",RUS,,W,,,,False
+60,ATH-86B7D8DF,"Sung, Eunryung",KOR,,W,,,,False
+61,ATH-E8EF0BC4,"Wojtusciszyn, Natalia",POL,,W,,,,False
+62,ATH-670F14E7,"Shkhumova, Olena",UKR,,W,,,,False
+63,ATH-DAF767A1,"Frisch, Aileen Christina",KOR,,W,,,,False
+64,ATH-9456CABF,"Obratov, Daria",CRO,,W,,,,False
+65,ATH-BD734F45,"Ravenna, Veronica Maria",ARG,,W,,,,False
+66,ATH-DBC276B5,"Simonakova, Katarina",SVK,,W,,,,False
+67,ATH-3EAA48C2,"Noskova, Tereza",CZE,,W,,,,False
+68,ATH-8961A93E,"Choi, Eunju",KOR,,W,,,,False
+69,ATH-986C1288,"Boch, Margot Catherine",FRA,,W,,,,False
+70,ATH-F355E2CB,"Stetskiv, Olena",UKR,,W,,,,False
+71,ATH-3ED3CB45,"Scott, Danielle Louise",GBR,,W,,,,False
+72,ATH-E56284ED,"Maag, Natalie",SUI,,W,,,,False
+73,ATH-83CECE9D,"Germaine, Raychel Michele",USA,,W,,,,False
+74,ATH-190C5A38,"Lin, Sin-Rong",TPE,,W,,,,False
+75,ATH-A74A231F,"Gula, Dariya",UKR,,W,,,,False
+76,ATH-2E344FFC,"Robatscher, Sandra",ITA,,W,,,,False
+77,ATH-50E87924,"Lin, Jr-Yun",TPE,,W,,,,False
+78,ATH-3B06AD12,"Smirnova, Anna",KAZ,,W,,,,False
+79,ATH-2A1D4266,"Sefkatlioglu, Azize Berfin",TUR,,W,,,,False
+80,ATH-87695585,"Obratov, Dania",CRO,,W,,,,False
+81,ATH-D1805EE4,"Cetin, Buse",TUR,,W,,,,False
+82,ATH-FA4B667C,"Bogacheva, Anastassiya",KAZ,,W,,,,False
+83,ATH-B45D5492,GEISENBERGER Natalie,GER,,W,,,,False
+84,ATH-EF6B567C,EITBERGER Dajana,GER,,W,,,,False
+85,ATH-7B155E1D,GOUGH Alex,CAN,,W,,,,False
+86,ATH-489E3FC2,HUEFNER Tatjana,GER,,W,,,,False
+87,ATH-BDFD0DE0,McRAE Kimberley,CAN,,W,,,,False
+88,ATH-372B834B,HAMLIN Erin,USA,,W,,,,False
+89,ATH-011DD5B7,STRAMATURARU Raluca,ROU,,W,,,,False
+90,ATH-C812C2CC,FRISCH Aileen Christina,KOR,,W,,,,False
+91,ATH-6E8066F5,EGLE Madeleine,AUT,,W,,,,False
+92,ATH-12A7C89A,VOETTER Andrea,ITA,,W,,,,False
+93,ATH-85F20BC7,KOCHER Martina,SUI,,W,,,,False
+94,ATH-38BBA2E2,ZIRNE Ulla,LAT,,W,,,,False
+95,ATH-97B0C199,APSHKRUM Brooke,CAN,,W,,,,False
+96,ATH-F94F0D66,ROBATSCHER Sandra,ITA,,W,,,,False
+97,ATH-27700272,BATURINA Ekaterina,OAR,,W,,,,False
+98,ATH-25A5B507,CAUCE Eliza,LAT,,W,,,,False
+99,ATH-EEB837E7,PROCK Hannah,AUT,,W,,,,False
+100,ATH-45F04D18,SUNG Eunryung,KOR,,W,,,,False
+101,ATH-A5D6E8E9,BRITCHER Summer,USA,,W,,,,False
+102,ATH-9154C3AB,KULS-KUSYK Ewa,POL,,W,,,,False
+103,ATH-96424D24,SHKHUMOVA Olena,UKR,,W,,,,False
+104,ATH-1360A16B,APARJODE Kendija,LAT,,W,,,,False
+105,ATH-1514BC20,SIMONAKOVA Katarina,SVK,,W,,,,False
+106,ATH-9676EBD7,RAVENNA Veronica Maria,ARG,,W,,,,False
+107,ATH-496775FD,WOJTUSCISZYN Natalia,POL,,W,,,,False
+108,ATH-096933B7,NOSKOVA Tereza,CZE,,W,,,,False
+109,ATH-376D4DC5,OBRATOV Daria,CRO,,W,,,,False
+110,ATH-667D1216,STETSKIV Olena,UKR,,W,,,,False
+111,ATH-B1F730BB,SWEENEY Emily,USA,,W,,,,False
+112,ATH-54ACF3B0,PLATZER Birgit,AUT,,W,,,,False
