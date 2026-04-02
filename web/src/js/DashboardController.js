@@ -362,7 +362,9 @@ class DashboardController {
     };
   }
 
-  #runPrediction() {
+  async #runPrediction() {
+    const _yield = () => new Promise(r => setTimeout(r, 0));
+    console.log("[PRED] start");
     const inp = this.#getInputs();
     const resultEl = this.#el('dash-prediction-result');
     const coachEl = this.#el('dash-coaching-tips');
@@ -387,6 +389,8 @@ class DashboardController {
       return;
     }
 
+    await _yield();
+    console.log("[PRED] xgb start");
     // XGBoost 출발 전 예측 (종목별 모델 선택)
     let xgbPredicted = null;
     let xgbModel = null;
@@ -424,6 +428,8 @@ class DashboardController {
       xgbModel = preModel;
     }
 
+    await _yield();
+    console.log("[PRED] mlr start");
     // MLR 예측 (Poly3+Ridge if available, fallback to classic MLR)
     let mlrPredicted = null;
     let mlrR2 = 0;
@@ -494,6 +500,8 @@ class DashboardController {
       </div>`;
     };
 
+    await _yield();
+    console.log("[PRED] render start");
     // 결과 렌더링
     resultEl.innerHTML = `
       <div class="dash-big-number">
@@ -505,17 +513,16 @@ class DashboardController {
       </div>
     `;
 
-    // 분포 차트
-    const finishes = okRecords.map(r => parseFloat(r.finish)).filter(v => v > 0 && v < 65);
-    this.#renderDistChart(finishes, predicted);
-
-    // 코칭 팁
+    // 코칭 팁 & 필터 상태 (동기)
     if (coachEl) coachEl.innerHTML = this.#generateTips(inp, predicted, mlrResult);
-
-    // 필터 상태 업데이트
     this.#updateFilterStatus(okRecords);
 
-    // countUp 애니메이션
+    // 분포 차트 & 애니메이션 (비동기)
+    const finishes = okRecords.map(r => parseFloat(r.finish)).filter(v => v > 0 && v < 65);
+    await _yield();
+    console.log("[PRED] chart start");
+    this.#renderDistChart(finishes, predicted);
+    await _yield();
     if (typeof UIController !== 'undefined' && UIController.animateCountUp) {
       UIController.animateCountUp(resultEl);
     }
