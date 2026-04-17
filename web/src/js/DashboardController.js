@@ -103,7 +103,7 @@ class DashboardController {
     const athletes = typeof ATHLETES !== 'undefined' ? ATHLETES : [];
     const sorted = [...athletes].sort((a, b) => a.athlete_id.localeCompare(b.athlete_id));
     playerEl.innerHTML = '<option value="">선수 선택</option>' + sorted.map(a =>
-      `<option value="${a.athlete_id}">${a.name} (${a.nat || ''})</option>`
+      `<option value="${a.athlete_id}">${a.athlete_id}</option>`
     ).join('');
   }
 
