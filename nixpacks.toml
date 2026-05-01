@@ -3,7 +3,7 @@ nixPkgs = ["python312Full", "python312Packages.pip"]
 aptPkgs = []
 
 [phases.install]
-cmds = ["python3 -m ensurepip --upgrade", "python3 -m pip install -r backend/requirements.txt"]
+cmds = ["python3 -m pip install --break-system-packages -r backend/requirements.txt"]
 
 [start]
 cmd = "python3 -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"
