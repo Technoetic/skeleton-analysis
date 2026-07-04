@@ -1,1 +1,17 @@
-﻿curve_number,radius_m,banking_deg,difficulty,coaching_tip
+﻿id,track_name,curve_number,curve_type,radius_m,banking_deg,elevation_m,elevation_drop_m,distance_from_start_m,segment,sensor_before,sensor_after,avg_speed_kmh,max_speed_kmh,dnf_count,difficulty,coaching_tip
+1,Alpensia Sliding Centre,3,Left,28,20,838,12,210,Start-Int.1,Start,Int.1,,,0,중,경사가 급해지는 구간. 무게중심을 낮추어야 함.
+2,Alpensia Sliding Centre,4,Right,25,22,830,20,290,Start-Int.1,Start,Int.1,,,0,중상,Int.1 센서 직전. 이 커브 진입 속도가 전체 기록을 좌우. 최적 라인 필수.
+3,Alpensia Sliding Centre,5,Left,32,18,820,30,370,Int.1-Int.2,Int.1,Int.2,,,0,중,Int.1 통과 후 가속 구간 시작. 불필요한 조향 최소화.
+4,Alpensia Sliding Centre,6,Right,27,21,810,40,440,Int.1-Int.2,Int.1,Int.2,,,0,중상,속도가 붙기 시작하는 구간. 벽면 접촉 최소화가 핵심.
+5,Alpensia Sliding Centre,7,Left,22,25,798,52,520,Int.1-Int.2,Int.1,Int.2,,,0,상,Int.2 센서 직전. 반경이 급격히 줄어듦. 진입 각도와 타이밍이 매우 중요. 이 커브에서 0.1~0.3초 차이 발생.
+6,Alpensia Sliding Centre,8,Right,30,20,785,65,600,Int.2-Int.3,Int.2,Int.3,,,0,중,Int.2 통과 후 긴 가속 구간 시작. 안정적 자세 유지.
+7,Alpensia Sliding Centre,9,Left,26,22,772,78,690,Int.2-Int.3,Int.2,Int.3,,,0,중상,중간 구간 핵심 커브. 일정한 압력으로 통과해야 속도 손실 최소화.
+8,Alpensia Sliding Centre,10,Right,24,24,758,92,770,Int.2-Int.3,Int.2,Int.3,,,0,상,속도 100km/h 이상 구간. G-force가 강해지므로 목과 어깨 긴장 필수.
+9,Alpensia Sliding Centre,11,Left,28,21,745,105,850,Int.2-Int.3,Int.2,Int.3,,,0,중,Int.3 접근 구간. 라인 복원 후 안정적 통과.
+10,Alpensia Sliding Centre,12,Right,20,28,730,120,930,Int.2-Int.3,Int.2,Int.3,,,0,최상,Int.3 센서 직전. 트랙 내 가장 작은 반경(20m). DNF 최다 발생 구간. 완벽한 라인이 아니면 벽면 충돌 위험.
+11,Alpensia Sliding Centre,13,Left,32,19,715,135,1010,Int.3-Int.4,Int.3,Int.4,,,0,중,12번 커브 이후 회복 구간. 흐트러진 자세를 빠르게 복원.
+12,Alpensia Sliding Centre,14,Right,26,23,700,150,1080,Int.3-Int.4,Int.3,Int.4,,,0,중상,피니시 구간 가속. 최고 속도(120km/h+) 안정성이 핵심.
+13,Alpensia Sliding Centre,15,Left,24,25,685,165,1140,Int.3-Int.4,Int.3,Int.4,,,0,상,Int.4 센서 직전. 최고 속도 도달 지점. 0.01초 단위 미세 조정이 최종 기록 결정.
+14,Alpensia Sliding Centre,16,Right,35,16,672,178,1200,Int.4-Finish,Int.4,Finish,,,0,하,마지막 커브. 감속 시작이지만 브레이킹 포인트까지 최대 속도 유지.
+15,Alpensia Sliding Centre,1,Left,35,15,850,0,95,Start-Int.1,Start,Int.1,,,0,하,출발 직후 첫 커브. 안정적 진입이 핵심. 과도한 조향 금지.
+16,Alpensia Sliding Centre,2,Right,30,18,845,5,145,Start-Int.1,Start,Int.1,,,0,중,1번 커브에서 이어지는 S자 구간. 리듬감 유지가 중요.

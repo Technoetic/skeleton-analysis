@@ -12,7 +12,7 @@ TABLE_FILES = {
     "skeleton_records": "data/skeleton_records.csv",
     "athletes": "data/athletes.csv",
     "luge_records": "luge_records.csv",
-    "luge_athletes": "luge_athletes.csv",
+    "luge_athletes": "data/luge_athletes.csv",
     "bobsled_records": "bobsled_records.csv",
     "bobsled_athletes": "data/bobsled_athletes.csv",
     "track_metadata": "data/track_metadata.csv",
