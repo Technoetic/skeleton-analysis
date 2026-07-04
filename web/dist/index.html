@@ -9438,7 +9438,8 @@ class Chatbot {
 
   static MODEL = 'google/gemini-2.5-flash-lite';
 
-  static SUPABASE_URL = 'https://dxaehcocrbvhatyfmrvp.supabase.co';
+  // Supabase 소멸(2026-07) — 동일 오리진 백엔드 shim(/rest/v1)으로 전환
+  static SUPABASE_URL = '';
 
   static SUPABASE_KEY = (typeof SUPABASE_KEY !== 'undefined' && SUPABASE_KEY) ? SUPABASE_KEY : 'sb_publishable_5_U3dll4HB9fAXOxmgm83w_wnOiei-e';
 

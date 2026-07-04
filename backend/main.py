@@ -7,17 +7,21 @@ from fastapi.staticfiles import StaticFiles
 import httpx
 
 from backend.config import (
-    CORS_ORIGINS, SUPABASE_URL, SUPABASE_KEY, STATIC_DIR,
+    CORS_ORIGINS, STATIC_DIR,
     BIZROUTER_API_KEY, BIZROUTER_API_URL,
 )
 from backend.data_service import DataService
+from backend.local_data import load_tables
 from backend.models import SkeletonRecord
+from backend.postgrest_shim import router as postgrest_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    records = await DataService.load(SUPABASE_URL, SUPABASE_KEY)
-    print(f"Loaded {len(records)} records from Supabase")
+    tables = load_tables()
+    records = DataService.load_local(tables["skeleton_records"])
+    counts = {name: len(rows) for name, rows in tables.items()}
+    print(f"Loaded local tables: {counts} (skeleton cache: {len(records)})")
     yield
 
 
@@ -38,7 +42,9 @@ def get_records():
 
 @app.get("/api/config")
 def get_config():
-    return {"supabaseUrl": SUPABASE_URL, "supabaseKey": SUPABASE_KEY}
+    # Supabase 소멸(2026-07) — 빈 문자열이면 프런트가 동일 오리진 /rest/v1(shim)을 호출한다.
+    # undefined 방지를 위해 반드시 문자열 ''을 명시 반환해야 한다.
+    return {"supabaseUrl": "", "supabaseKey": ""}
 
 
 @app.post("/api/chat")
@@ -94,5 +100,7 @@ async def llm_proxy(request: Request, path: str):
 def serve_index():
     return FileResponse(f"{STATIC_DIR}/index.html")
 
+
+app.include_router(postgrest_router)
 
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
